@@ -1,9 +1,10 @@
 # archon-laravel
 
-Laravel instrumentation adapter for ArchonFlow Phase 3 (real runtime traces).
+Laravel instrumentation adapter for ArchonFlow Phase 3 & 4 (real runtime traces).
 
 ## What this package does
 
+- **Zero-config**: Automatically captures HTTP requests after install
 - Captures one real Laravel HTTP request as an ArchonFlow trace
 - Produces real nodes and edges from runtime execution
 - Stores trace records in `.archon/flow-history.json` (CLI-compatible format)
@@ -34,10 +35,99 @@ Not included yet:
 composer require archonflow/laravel
 ```
 
-Publish config:
+**That's it!** ArchonFlow will now automatically trace HTTP requests in non-production environments.
+
+Hit any route:
+
+```bash
+curl http://your-app.test/any-route
+```
+
+Check the trace:
+
+```bash
+cat .archon/flow-history.json
+```
+
+Or browse individual traces:
+
+```bash
+ls storage/archon-traces/
+```
+
+## Zero-Config Experience
+
+By default, ArchonFlow:
+- ✅ Automatically registers middleware globally
+- ✅ Captures all HTTP requests (web + api)
+- ✅ Captures controller execution
+- ✅ Captures database queries
+- ✅ Writes traces to `.archon/flow-history.json`
+- ✅ Only runs in non-production environments
+
+**No code changes required.**
+
+## Configuration (Optional)
+
+Publish config if you want to customize behavior:
 
 ```bash
 php artisan vendor:publish --tag=archonflow-config
+```
+
+The published config file at `config/archonflow.php` provides fine-grained control:
+
+### Enable/Disable
+
+```php
+// Explicitly enable or disable (null = auto-detect based on environment)
+'enabled' => env('ARCHONFLOW_ENABLED'),
+
+// Environments where ArchonFlow should NOT run
+'except_environments' => ['production', 'testing'],
+
+// URI patterns to exclude from tracing
+'except' => [
+    'telescope*',
+    'horizon*',
+],
+
+// Sample rate (0.0 - 1.0): trace only a percentage of requests
+'sample_rate' => env('ARCHONFLOW_SAMPLE_RATE', 1.0),
+```
+
+### Sources
+
+Control which data sources are active:
+
+```php
+'sources' => [
+    'request' => true,      // Request lifecycle
+    'controller' => true,   // Controller execution
+    'database' => true,     // Database queries
+    'external' => true,     // External HTTP calls
+],
+```
+
+### Source Options
+
+Configure behavior per source:
+
+```php
+'options' => [
+    'database' => [
+        'capture_sql' => false,      // Include SQL text in trace
+        'capture_bindings' => false, // Include query bindings
+    ],
+],
+```
+
+### Storage
+
+```php
+'storage_path' => base_path('.archon/flow-history.json'),
+'trace_directory' => storage_path('archon-traces'),
+'max_records' => 1000,
 ```
 
 ## Enable request capture middleware
@@ -54,16 +144,16 @@ Route::middleware(['archon.trace'])->group(function () {
 
 ## Manual service and external tracing
 
-Use the static helper:
+Use the Facade:
 
 ```php
-use ArchonFlow\Laravel\Helpers\Archon;
+use ArchonLaravel\Facades\Archon;
 
-$order = Archon::trace('service', 'OrderService.findOrder', function () use ($id) {
+$order = Archon::traceService('OrderService.findOrder', function () use ($id) {
     return $this->orderService->findOrder($id);
 });
 
-$payload = Archon::external('BillingApi.charge', function () use ($order) {
+$payload = Archon::traceExternal('BillingApi.charge', function () use ($order) {
     return Http::post('https://billing.example.com/charge', ['order_id' => $order->id])->json();
 });
 ```
@@ -73,6 +163,69 @@ Or use the global helper:
 ```php
 archon()->traceService('UserService.findUser', fn () => $service->findUser($id));
 ```
+
+Generic trace method:
+
+```php
+Archon::trace('service', 'UserService.findUser', fn () => $service->findUser($id));
+Archon::trace('external', 'PaymentApi.charge', fn () => $api->charge($amount));
+```
+
+## Assisted Tracing
+
+ArchonFlow provides multiple ways to make tracing easier and less verbose:
+
+### Using the Traceable Trait
+
+Add the trait to your service classes:
+
+```php
+use ArchonFlow\Laravel\Support\Traceable;
+
+class UserService
+{
+    use Traceable;
+
+    public function findUser(int $id): User
+    {
+        return $this->traceService('UserService.findUser', function () use ($id) {
+            // Business logic here
+            return User::find($id);
+        });
+    }
+
+    public function syncWithExternalApi(): void
+    {
+        $this->traceExternal('ExternalUserApi.sync', function () {
+            // External API call
+            Http::post('https://api.example.com/sync');
+        });
+    }
+}
+```
+
+### Using PHP Attributes (Future)
+
+```php
+use ArchonFlow\Laravel\Support\Trace;
+
+class OrderService
+{
+    #[Trace('service')]
+    public function processOrder(int $orderId): void
+    {
+        // Automatically traced as "OrderService.processOrder"
+    }
+
+    #[Trace('external', 'PaymentAPI.charge')]
+    public function chargePayment(float $amount): void
+    {
+        // Automatically traced with custom label
+    }
+}
+```
+
+**Note:** Attribute-based tracing requires additional AOP/interceptor setup and is not yet fully implemented.
 
 ## Output format
 

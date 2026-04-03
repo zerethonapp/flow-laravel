@@ -22,7 +22,8 @@ final class CaptureArchonTrace
 
     public function handle(Request $request, Closure $next): Response
     {
-        if (!(bool) config('archonflow.enabled', true)) {
+        // Check if ArchonFlow is enabled and if request should be traced
+        if (!$this->shouldTrace($request)) {
             /** @var Response $response */
             $response = $next($request);
             return $response;
@@ -30,7 +31,7 @@ final class CaptureArchonTrace
 
         $this->requestHook->start($request);
 
-        if ((bool) config('archonflow.capture_controller', true)) {
+        if ($this->shouldCollect('controller')) {
             $this->controllerHook->start($request);
         }
 
@@ -45,7 +46,7 @@ final class CaptureArchonTrace
             $exception = $throwable;
             throw $throwable;
         } finally {
-            if ((bool) config('archonflow.capture_controller', true)) {
+            if ($this->shouldCollect('controller')) {
                 $this->controllerHook->finish();
             }
 
@@ -54,5 +55,43 @@ final class CaptureArchonTrace
                 $this->traceWriter->write($record);
             }
         }
+    }
+
+    /**
+     * Check if the current request should be traced
+     */
+    private function shouldTrace(Request $request): bool
+    {
+        // Check if ArchonFlow is enabled
+        $enabled = config('archonflow.enabled');
+        if ($enabled === false) {
+            return false;
+        }
+
+        // Check sample rate
+        $sampleRate = (float) config('archonflow.sample_rate', 1.0);
+        if ($sampleRate < 1.0 && (mt_rand() / mt_getrandmax()) > $sampleRate) {
+            return false;
+        }
+
+        // Check if request matches any excluded patterns
+        $except = config('archonflow.except', []);
+        $requestPath = $request->path();
+
+        foreach ($except as $pattern) {
+            if (str($requestPath)->is($pattern)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if we should collect data from the specified source
+     */
+    private function shouldCollect(string $source): bool
+    {
+        return (bool) config("archonflow.sources.{$source}", false);
     }
 }
