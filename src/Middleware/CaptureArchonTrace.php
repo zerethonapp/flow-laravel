@@ -6,6 +6,7 @@ namespace ArchonFlow\Laravel\Middleware;
 
 use ArchonFlow\Laravel\Instrumentation\Hooks\ControllerHook;
 use ArchonFlow\Laravel\Instrumentation\Hooks\RequestHook;
+use ArchonFlow\Laravel\Instrumentation\TraceWriter;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,12 +17,22 @@ final class CaptureArchonTrace
     public function __construct(
         private readonly RequestHook $requestHook,
         private readonly ControllerHook $controllerHook,
+        private readonly TraceWriter $traceWriter,
     ) {}
 
     public function handle(Request $request, Closure $next): Response
     {
+        if (!(bool) config('archonflow.enabled', true)) {
+            /** @var Response $response */
+            $response = $next($request);
+            return $response;
+        }
+
         $this->requestHook->start($request);
-        $this->controllerHook->start($request);
+
+        if ((bool) config('archonflow.capture_controller', true)) {
+            $this->controllerHook->start($request);
+        }
 
         $response = null;
         $exception = null;
@@ -34,8 +45,14 @@ final class CaptureArchonTrace
             $exception = $throwable;
             throw $throwable;
         } finally {
-            $this->controllerHook->finish();
-            $this->requestHook->finish($response, $exception);
+            if ((bool) config('archonflow.capture_controller', true)) {
+                $this->controllerHook->finish();
+            }
+
+            $record = $this->requestHook->finish($response, $exception);
+            if ($record !== null) {
+                $this->traceWriter->write($record);
+            }
         }
     }
 }

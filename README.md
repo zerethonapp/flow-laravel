@@ -59,7 +59,7 @@ Use the static helper:
 ```php
 use ArchonFlow\Laravel\Helpers\Archon;
 
-$order = Archon::trace('OrderService.findOrder', function () use ($id) {
+$order = Archon::trace('service', 'OrderService.findOrder', function () use ($id) {
     return $this->orderService->findOrder($id);
 });
 
@@ -110,7 +110,7 @@ Use middleware + manual service/external blocks:
 ```php
 // routes/web.php
 Route::middleware(['archon.trace'])->get('/archon-demo', function () {
-    $user = \ArchonFlow\Laravel\Helpers\Archon::trace('UserService.findUser', function () {
+    $user = \ArchonFlow\Laravel\Helpers\Archon::trace('service', 'UserService.findUser', function () {
         return DB::table('users')->where('id', 1)->first();
     });
 

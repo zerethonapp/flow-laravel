@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ArchonFlow\Laravel\Instrumentation\Hooks;
 
-use ArchonFlow\Laravel\Instrumentation\InstrumentationManager;
+use ArchonFlow\Laravel\Instrumentation\TraceCollector;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\DB;
 
@@ -13,17 +13,17 @@ final class DatabaseHook
     private bool $registered = false;
 
     public function __construct(
-        private readonly InstrumentationManager $manager,
+        private readonly TraceCollector $collector,
     ) {}
 
-    public function register(): void
+    public function register(bool $captureSql = false): void
     {
         if ($this->registered) {
             return;
         }
 
-        DB::listen(function (QueryExecuted $query): void {
-            $this->manager->recordDatabaseQuery($query);
+        DB::listen(function (QueryExecuted $query) use ($captureSql): void {
+            $this->collector->recordDatabaseQuery($query, $captureSql);
         });
 
         $this->registered = true;

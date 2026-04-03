@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace ArchonFlow\Laravel\Instrumentation\Hooks;
 
-use ArchonFlow\Laravel\Instrumentation\InstrumentationManager;
+use ArchonFlow\Laravel\Instrumentation\TraceCollector;
 
 final class ExternalCallHook
 {
     public function __construct(
-        private readonly InstrumentationManager $manager,
+        private readonly TraceCollector $collector,
     ) {}
 
     /**
@@ -20,6 +20,6 @@ final class ExternalCallHook
      */
     public function trace(string $label, callable $callback, array $meta = []): mixed
     {
-        return $this->manager->traceExternal($label, $callback, $meta);
+        return $this->collector->traceExternal($label, $callback, $meta);
     }
 }

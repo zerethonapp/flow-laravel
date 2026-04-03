@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use ArchonFlow\Laravel\Instrumentation\InstrumentationManager;
+use ArchonFlow\Laravel\Instrumentation\TraceCollector;
 
-if (!function_exists("archon")) {
-    function archon(): InstrumentationManager
+if (!function_exists('archon')) {
+    function archon(): TraceCollector
     {
-        return app(InstrumentationManager::class);
+        return app(TraceCollector::class);
     }
 }

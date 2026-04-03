@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ArchonFlow\Laravel\Instrumentation\Hooks;
 
-use ArchonFlow\Laravel\Instrumentation\InstrumentationManager;
+use ArchonFlow\Laravel\Instrumentation\TraceCollector;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -12,16 +12,19 @@ use Throwable;
 final class RequestHook
 {
     public function __construct(
-        private readonly InstrumentationManager $manager,
+        private readonly TraceCollector $collector,
     ) {}
 
     public function start(Request $request): void
     {
-        $this->manager->startRequest($request);
+        $this->collector->startRequest($request);
     }
 
-    public function finish(?Response $response, ?Throwable $exception = null): void
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function finish(?Response $response, ?Throwable $exception = null): ?array
     {
-        $this->manager->finishRequest($response, $exception);
+        return $this->collector->finishRequest($response, $exception);
     }
 }
