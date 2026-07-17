@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace ArchonFlow\Laravel\Providers;
 
+use ArchonFlow\Laravel\Console\CacheServicesCommand;
+use ArchonFlow\Laravel\Console\ClearServicesCacheCommand;
 use ArchonFlow\Laravel\Instrumentation\Hooks\DatabaseHook;
+use ArchonFlow\Laravel\Instrumentation\Hooks\ExternalHttpHook;
+use ArchonFlow\Laravel\Instrumentation\ServiceAutoTraceRegistrar;
 use ArchonFlow\Laravel\Instrumentation\TraceCollector;
 use ArchonFlow\Laravel\Instrumentation\TraceWriter;
 use ArchonFlow\Laravel\Middleware\CaptureArchonTrace;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 
@@ -30,6 +35,16 @@ final class ArchonFlowServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(DatabaseHook::class);
+
+        // Available regardless of except_environments — archon:cache-services
+        // is precisely the tool you run in a production deploy pipeline to
+        // pre-compute the manifest ServiceAutoTraceRegistrar reads at boot.
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                CacheServicesCommand::class,
+                ClearServicesCacheCommand::class,
+            ]);
+        }
     }
 
     /**
@@ -55,14 +70,31 @@ final class ArchonFlowServiceProvider extends ServiceProvider
 
         // Auto-register middleware globally for zero-config experience
         if ($this->shouldCollect('request')) {
-            $this->app['router']->pushMiddlewareToGroup('web', CaptureArchonTrace::class);
-            $this->app['router']->pushMiddlewareToGroup('api', CaptureArchonTrace::class);
+            $router->pushMiddlewareToGroup('web', CaptureArchonTrace::class);
+            $router->pushMiddlewareToGroup('api', CaptureArchonTrace::class);
         }
 
         // Register database hook if enabled
         if ($this->shouldCollect('database')) {
             $options = config('archonflow.options.database', []);
             app(DatabaseHook::class)->register($options['capture_sql'] ?? false);
+        }
+
+        // Auto-detect outbound HTTP calls (Http:: facade) — mirrors Debugbar's
+        // HttpClientCollector, no manual Archon::trace('external', ...) needed.
+        if ($this->shouldCollect('external')) {
+            app(ExternalHttpHook::class)->register($this->app->make(Dispatcher::class));
+        }
+
+        // Auto-wrap classes under configured namespaces in a tracing proxy so
+        // 'service' spans are captured without touching the class itself.
+        if ($this->shouldCollect('service')) {
+            $namespaces = (array) config('archonflow.trace_namespaces', []);
+            if ($namespaces !== []) {
+                $cachePath = (string) config('archonflow.services_cache_path', base_path('.archon/services-cache.php'));
+                $excludePrefixes = (array) config('archonflow.trace_namespace_excludes', []);
+                (new ServiceAutoTraceRegistrar())->register($this->app, $namespaces, $cachePath, $excludePrefixes);
+            }
         }
     }
 

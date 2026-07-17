@@ -61,6 +61,36 @@ final class TraceCollector
     }
 
     /**
+     * Open a service span without a callback wrapper. Used by the auto-trace
+     * proxy so it can preserve by-reference/variadic parameter forwarding
+     * around the real method call instead of going through a closure.
+     *
+     * @param array<string, mixed> $meta
+     */
+    public function beginServiceSpan(string $label, array $meta = []): ?string
+    {
+        if ($this->context === null) {
+            return null;
+        }
+
+        return $this->context->beginNode(
+            id: null,
+            type: 'service',
+            label: $label,
+            meta: $meta,
+        );
+    }
+
+    public function endServiceSpan(?string $nodeId): void
+    {
+        if ($this->context === null || $nodeId === null) {
+            return;
+        }
+
+        $this->context->endNode($nodeId);
+    }
+
+    /**
      * @template T
      * @param callable(): T $callback
      * @param array<string, mixed> $meta
@@ -68,11 +98,7 @@ final class TraceCollector
      */
     public function trace(string $type, string $label, callable $callback, array $meta = []): mixed
     {
-        if ($type === "external") {
-            return $this->traceExternal($label, $callback, $meta);
-        }
-
-        return $this->traceService($label, $callback, $meta);
+        return $this->traceNode($type, $label, $callback, $meta);
     }
 
     /**
@@ -106,6 +132,26 @@ final class TraceCollector
             type: 'database',
             label: $querySummary,
             durationMs: max(1, (int) round($query->time)),
+            meta: $meta,
+        );
+    }
+
+    /**
+     * Record an outbound HTTP call captured automatically via
+     * Illuminate\Http\Client events (no manual instrumentation required).
+     *
+     * @param array<string, mixed> $meta
+     */
+    public function recordExternalCall(string $label, int $durationMs, array $meta = []): void
+    {
+        if ($this->context === null) {
+            return;
+        }
+
+        $this->context->addTimedNode(
+            type: 'external',
+            label: $label,
+            durationMs: max(1, $durationMs),
             meta: $meta,
         );
     }
