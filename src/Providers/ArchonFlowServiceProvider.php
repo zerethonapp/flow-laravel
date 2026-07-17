@@ -10,6 +10,7 @@ use ArchonFlow\Laravel\Instrumentation\Hooks\DatabaseHook;
 use ArchonFlow\Laravel\Instrumentation\Hooks\ExternalHttpHook;
 use ArchonFlow\Laravel\Instrumentation\ServiceAutoTraceRegistrar;
 use ArchonFlow\Laravel\Instrumentation\TraceCollector;
+use ArchonFlow\Laravel\Instrumentation\TraceReader;
 use ArchonFlow\Laravel\Instrumentation\TraceWriter;
 use ArchonFlow\Laravel\Middleware\CaptureArchonTrace;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -35,6 +36,11 @@ final class ArchonFlowServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(DatabaseHook::class);
+
+        $this->app->singleton(TraceReader::class, static function (): TraceReader {
+            $path = (string) config('archonflow.storage_path', base_path('.archon/flow-history.json'));
+            return new TraceReader($path);
+        });
 
         // Available regardless of except_environments — archon:cache-services
         // is precisely the tool you run in a production deploy pipeline to
@@ -67,6 +73,22 @@ final class ArchonFlowServiceProvider extends ServiceProvider
         /** @var Router $router */
         $router = $this->app->make('router');
         $router->aliasMiddleware('archon.trace', CaptureArchonTrace::class);
+
+        // Lets external tools (e.g. the archon-audit crawler) correlate a
+        // request they just made — via the X-Archon-Trace-Id response
+        // header set in CaptureArchonTrace — with the trace it produced,
+        // over plain HTTP. Deliberately not attached to the 'web'/'api'
+        // middleware groups, so it's never traced itself and skips
+        // session/CSRF overhead.
+        $router->get('/_archon/trace/{traceId}', function (string $traceId) {
+            $record = app(TraceReader::class)->find($traceId);
+
+            if ($record === null) {
+                return response()->json(['error' => 'trace not found'], 404);
+            }
+
+            return response()->json($record);
+        });
 
         // Auto-register middleware globally for zero-config experience
         if ($this->shouldCollect('request')) {

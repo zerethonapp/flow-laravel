@@ -53,6 +53,10 @@ final class CaptureArchonTrace
             $record = $this->requestHook->finish($response, $exception);
             if ($record !== null) {
                 $this->traceWriter->write($record);
+
+                if ($response !== null) {
+                    $response->headers->set('X-Archon-Trace-Id', (string) $record['traceId']);
+                }
             }
         }
     }
