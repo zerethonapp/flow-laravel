@@ -90,6 +90,38 @@ final class ArchonFlowServiceProvider extends ServiceProvider
             return response()->json($record);
         });
 
+        // Lets a caller browse everything this site has captured — not just
+        // a trace it already knows the ID of (e.g. a dashboard "Traces" tab
+        // for a project, independent of any specific audit scan run).
+        $router->get('/_archon/traces', function (\Illuminate\Http\Request $request) {
+            $limit = max(1, min(200, (int) $request->query('limit', 50)));
+            $records = app(TraceReader::class)->all($limit);
+
+            $summaries = array_map(static function (array $record): array {
+                $requestNode = null;
+                foreach (($record['flow']['nodes'] ?? []) as $node) {
+                    if (is_array($node) && ($node['type'] ?? null) === 'request') {
+                        $requestNode = $node;
+                        break;
+                    }
+                }
+                $meta = is_array($requestNode['meta'] ?? null) ? $requestNode['meta'] : [];
+
+                return [
+                    'traceId' => $record['traceId'] ?? null,
+                    'timestamp' => $record['timestamp'] ?? null,
+                    'method' => $meta['method'] ?? null,
+                    'uri' => $meta['uri'] ?? null,
+                    'route' => $meta['route'] ?? null,
+                    'totalTime' => $record['result']['totalTime'] ?? null,
+                    'nodeCount' => $record['result']['nodeCount'] ?? null,
+                    'status' => $record['result']['status'] ?? null,
+                ];
+            }, $records);
+
+            return response()->json(['traces' => $summaries]);
+        });
+
         // Auto-register middleware globally for zero-config experience
         if ($this->shouldCollect('request')) {
             $router->pushMiddlewareToGroup('web', CaptureArchonTrace::class);

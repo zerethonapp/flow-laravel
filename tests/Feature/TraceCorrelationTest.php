@@ -37,4 +37,33 @@ class TraceCorrelationTest extends TestCase
 
         $response->assertStatus(404);
     }
+
+    /** @test */
+    public function it_lists_recent_traces_with_request_metadata_newest_first()
+    {
+        Route::middleware(['archon.trace'])->get('/archon-list-test-one', function () {
+            return response()->json(['ok' => true]);
+        });
+        Route::middleware(['archon.trace'])->get('/archon-list-test-two', function () {
+            return response()->json(['ok' => true]);
+        });
+
+        $first = $this->get('/archon-list-test-one');
+        $second = $this->get('/archon-list-test-two');
+
+        $response = $this->get('/_archon/traces');
+        $response->assertStatus(200);
+
+        $traceIds = collect($response->json('traces'))->pluck('traceId');
+        $this->assertEquals(
+            $second->headers->get('X-Archon-Trace-Id'),
+            $traceIds->first(),
+            'expected the most recently captured trace first',
+        );
+        $this->assertTrue($traceIds->contains($first->headers->get('X-Archon-Trace-Id')));
+
+        $newest = collect($response->json('traces'))->first();
+        $this->assertSame('/archon-list-test-two', $newest['uri']);
+        $this->assertSame('success', $newest['status']);
+    }
 }

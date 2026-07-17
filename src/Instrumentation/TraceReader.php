@@ -22,26 +22,48 @@ final class TraceReader
      */
     public function find(string $traceId): ?array
     {
-        if (!is_file($this->storagePath)) {
-            return null;
-        }
-
-        $content = trim((string) file_get_contents($this->storagePath));
-        if ($content === '') {
-            return null;
-        }
-
-        $records = json_decode($content, true);
-        if (!is_array($records)) {
-            return null;
-        }
-
-        foreach ($records as $record) {
-            if (is_array($record) && (string) ($record['traceId'] ?? '') === $traceId) {
+        foreach ($this->readAll() as $record) {
+            if ((string) ($record['traceId'] ?? '') === $traceId) {
                 return $record;
             }
         }
 
         return null;
+    }
+
+    /**
+     * Newest-first, capped at $limit — backs GET /_archon/traces so a
+     * caller can browse everything archon-laravel has captured for this
+     * site, not just a trace it already knows the ID of.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function all(int $limit = 50): array
+    {
+        $records = array_reverse($this->readAll());
+
+        return array_slice($records, 0, max(0, $limit));
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function readAll(): array
+    {
+        if (!is_file($this->storagePath)) {
+            return [];
+        }
+
+        $content = trim((string) file_get_contents($this->storagePath));
+        if ($content === '') {
+            return [];
+        }
+
+        $records = json_decode($content, true);
+        if (!is_array($records)) {
+            return [];
+        }
+
+        return array_values(array_filter($records, static fn ($record): bool => is_array($record)));
     }
 }
