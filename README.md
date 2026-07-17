@@ -2,6 +2,47 @@
 
 Laravel instrumentation adapter for ArchonFlow Phase 3 & 4 (real runtime traces).
 
+## Why ArchonFlow?
+
+Most developers:
+
+- ❌ Optimize database first (without proof)
+- ❌ Guess bottlenecks based on intuition  
+- ❌ Rely on generic monitoring tools
+
+**ArchonFlow shows the REAL bottleneck instantly:**
+
+- ✅ Identifies actual slow operations
+- ✅ Prevents wasted optimization effort
+- ✅ Provides clear, explainable insights
+
+### Real Example
+
+Your request takes **100ms**. Where's the bottleneck?
+
+**Without ArchonFlow:**
+- Maybe add database index? 🤔
+- Cache everything? 🤔
+- Optimize queries? 🤔
+
+**With ArchonFlow:**
+```
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                        ARCHONFLOW EXECUTION ANALYSIS                      ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+  Top Bottleneck:    UserService.fetch
+  Duration:          90ms
+  Impact:            90%
+  Classification:    clear bottleneck
+
+  Database:          2ms (2%)
+```
+
+**Conclusion:** Database is NOT the problem. Focus on service logic instead.
+
+---
+
 ## What this package does
 
 - **Zero-config**: Automatically captures HTTP requests after install
