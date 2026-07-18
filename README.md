@@ -1,8 +1,8 @@
-# archon-laravel
+# flow-laravel
 
-Laravel instrumentation adapter for ArchonFlow Phase 3 & 4 (real runtime traces).
+Laravel instrumentation adapter for Flow Phase 3 & 4 (real runtime traces).
 
-## Why ArchonFlow?
+## Why Flow?
 
 Most developers:
 
@@ -10,7 +10,7 @@ Most developers:
 - ❌ Guess bottlenecks based on intuition  
 - ❌ Rely on generic monitoring tools
 
-**ArchonFlow shows the REAL bottleneck instantly:**
+**Flow shows the REAL bottleneck instantly:**
 
 - ✅ Identifies actual slow operations
 - ✅ Prevents wasted optimization effort
@@ -20,15 +20,15 @@ Most developers:
 
 Your request takes **100ms**. Where's the bottleneck?
 
-**Without ArchonFlow:**
+**Without Flow:**
 - Maybe add database index? 🤔
 - Cache everything? 🤔
 - Optimize queries? 🤔
 
-**With ArchonFlow:**
+**With Flow:**
 ```
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║                        ARCHONFLOW EXECUTION ANALYSIS                      ║
+║                           FLOW EXECUTION ANALYSIS                         ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 
   Top Bottleneck:    UserService.fetch
@@ -46,7 +46,7 @@ Your request takes **100ms**. Where's the bottleneck?
 ## What this package does
 
 - **Zero-config**: Automatically captures HTTP requests after install
-- Captures one real Laravel HTTP request as an ArchonFlow trace
+- Captures one real Laravel HTTP request as a Flow trace
 - Produces real nodes and edges from runtime execution
 - Stores trace records in `.archon/flow-history.json` (CLI-compatible format)
 - Supports manual service/external instrumentation for v1 practicality
@@ -59,9 +59,9 @@ Included:
 - request lifecycle node
 - controller scoped node
 - database query nodes
-- manual service traces (`Archon::trace(...)`)
-- manual external traces (`Archon::external(...)`)
-- JSON storage compatible with `archon-cli scan/analyze`
+- manual service traces (`Flow::trace(...)`)
+- manual external traces (`Flow::external(...)`)
+- JSON storage compatible with `flow-cli scan/analyze`
 
 Not included yet:
 
@@ -73,10 +73,10 @@ Not included yet:
 ## Install
 
 ```bash
-composer require archonflow/laravel
+composer require zerethonapp/flow-laravel
 ```
 
-**That's it!** ArchonFlow will now automatically trace HTTP requests in non-production environments.
+**That's it!** Flow will now automatically trace HTTP requests in non-production environments.
 
 Hit any route:
 
@@ -98,7 +98,7 @@ ls storage/archon-traces/
 
 ## Zero-Config Experience
 
-By default, ArchonFlow:
+By default, Flow:
 - ✅ Automatically registers middleware globally
 - ✅ Captures all HTTP requests (web + api)
 - ✅ Captures controller execution
@@ -124,7 +124,7 @@ The published config file at `config/archonflow.php` provides fine-grained contr
 // Explicitly enable or disable (null = auto-detect based on environment)
 'enabled' => env('ARCHONFLOW_ENABLED'),
 
-// Environments where ArchonFlow should NOT run
+// Environments where Flow should NOT run
 'except_environments' => ['production', 'testing'],
 
 // URI patterns to exclude from tracing
@@ -173,12 +173,12 @@ Configure behavior per source:
 
 ## Enable request capture middleware
 
-Add middleware alias `archon.trace` to routes you want to capture.
+Add middleware alias `flow.trace` to routes you want to capture.
 
 Example:
 
 ```php
-Route::middleware(['archon.trace'])->group(function () {
+Route::middleware(['flow.trace'])->group(function () {
     Route::get('/orders/{id}', [OrderController::class, 'show']);
 });
 ```
@@ -188,13 +188,13 @@ Route::middleware(['archon.trace'])->group(function () {
 Use the Facade:
 
 ```php
-use ArchonLaravel\Facades\Archon;
+use Zerethon\Flow\Laravel\Facades\Flow;
 
-$order = Archon::traceService('OrderService.findOrder', function () use ($id) {
+$order = Flow::traceService('OrderService.findOrder', function () use ($id) {
     return $this->orderService->findOrder($id);
 });
 
-$payload = Archon::traceExternal('BillingApi.charge', function () use ($order) {
+$payload = Flow::traceExternal('BillingApi.charge', function () use ($order) {
     return Http::post('https://billing.example.com/charge', ['order_id' => $order->id])->json();
 });
 ```
@@ -202,26 +202,26 @@ $payload = Archon::traceExternal('BillingApi.charge', function () use ($order) {
 Or use the global helper:
 
 ```php
-archon()->traceService('UserService.findUser', fn () => $service->findUser($id));
+flow()->traceService('UserService.findUser', fn () => $service->findUser($id));
 ```
 
 Generic trace method:
 
 ```php
-Archon::trace('service', 'UserService.findUser', fn () => $service->findUser($id));
-Archon::trace('external', 'PaymentApi.charge', fn () => $api->charge($amount));
+Flow::trace('service', 'UserService.findUser', fn () => $service->findUser($id));
+Flow::trace('external', 'PaymentApi.charge', fn () => $api->charge($amount));
 ```
 
 ## Assisted Tracing
 
-ArchonFlow provides multiple ways to make tracing easier and less verbose:
+Flow provides multiple ways to make tracing easier and less verbose:
 
 ### Using the Traceable Trait
 
 Add the trait to your service classes:
 
 ```php
-use ArchonFlow\Laravel\Support\Traceable;
+use Zerethon\Flow\Laravel\Support\Traceable;
 
 class UserService
 {
@@ -248,7 +248,7 @@ class UserService
 ### Using PHP Attributes (Future)
 
 ```php
-use ArchonFlow\Laravel\Support\Trace;
+use Zerethon\Flow\Laravel\Support\Trace;
 
 class OrderService
 {
@@ -274,7 +274,7 @@ Traces are appended to:
 
 - `.archon/flow-history.json` (default)
 
-Record shape matches Archon core storage:
+Record shape matches Flow core storage:
 
 - `traceId`
 - `timestamp`
@@ -286,15 +286,15 @@ Record shape matches Archon core storage:
 From the Laravel app root (where `.archon/flow-history.json` exists):
 
 ```bash
-archonflow scan
-archonflow analyze
-archonflow status
+flow scan
+flow analyze
+flow status
 ```
 
 Raw JSON mode:
 
 ```bash
-archonflow scan --json
+flow scan --json
 ```
 
 ## Demo scenario (real request trace)
@@ -303,12 +303,12 @@ Use middleware + manual service/external blocks:
 
 ```php
 // routes/web.php
-Route::middleware(['archon.trace'])->get('/archon-demo', function () {
-    $user = \ArchonFlow\Laravel\Helpers\Archon::trace('service', 'UserService.findUser', function () {
+Route::middleware(['flow.trace'])->get('/flow-demo', function () {
+    $user = \Zerethon\Flow\Laravel\Helpers\Flow::trace('service', 'UserService.findUser', function () {
         return DB::table('users')->where('id', 1)->first();
     });
 
-    $remote = \ArchonFlow\Laravel\Helpers\Archon::external('BillingApi.status', function () {
+    $remote = \Zerethon\Flow\Laravel\Helpers\Flow::external('BillingApi.status', function () {
         return Http::get('https://httpbin.org/status/200')->status();
     });
 
@@ -319,7 +319,7 @@ Route::middleware(['archon.trace'])->get('/archon-demo', function () {
 Then call the route once and run:
 
 ```bash
-archonflow scan
+flow scan
 ```
 
 ## Config
