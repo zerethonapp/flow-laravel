@@ -1,6 +1,6 @@
 {
-  "name": "archonflow/laravel",
-  "description": "Laravel instrumentation adapter for ArchonFlow real trace capture.",
+  "name": "zerethonapp/flow-laravel",
+  "description": "Laravel instrumentation adapter for Flow real trace capture.",
   "type": "library",
   "license": "MIT",
   "require": {
