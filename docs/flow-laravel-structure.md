@@ -1,14 +1,14 @@
-# 📁 archon-laravel — Recommended Repo Structure
+# 📁 flow-laravel — Recommended Repo Structure
 
 ## 🎯 Purpose
 
-`archon-laravel` is the first real instrumentation adapter for ArchonFlow.
+`flow-laravel` is the first real instrumentation adapter for Flow.
 
 Its job is to:
 - hook into Laravel runtime execution
 - capture real request flow
-- convert Laravel execution into ArchonFlow trace format
-- feed real traces into `archon-engine` and `archon-cli`
+- convert Laravel execution into Flow trace format
+- feed real traces into `flow-engine` and `flow-cli`
 
 This package should remain focused on **instrumentation only**.
 
@@ -23,12 +23,12 @@ It should **not** own:
 ## 🧱 Recommended Repository Structure
 
 ```text
-archon-laravel/
+flow-laravel/
 ├── src/
 │   ├── Providers/
-│   │   └── ArchonFlowServiceProvider.php
+│   │   └── FlowServiceProvider.php
 │   ├── Facades/
-│   │   └── Archon.php
+│   │   └── Flow.php
 │   ├── Contracts/
 │   │   ├── TraceCollectorInterface.php
 │   │   ├── InstrumentationManagerInterface.php
@@ -46,15 +46,15 @@ archon-laravel/
 │   │       ├── DatabaseHook.php
 │   │       └── ExternalCallHook.php
 │   ├── Middleware/
-│   │   └── CaptureArchonTrace.php
+│   │   └── CaptureFlowTrace.php
 │   ├── Support/
 │   │   ├── GeneratesTraceIds.php
 │   │   ├── Clock.php
 │   │   └── ArrangesParentChildFlow.php
 │   ├── Helpers/
-│   │   └── archon.php
+│   │   └── flow.php
 │   └── Commands/
-│       └── InstallArchonFlowCommand.php
+│       └── InstallFlowCommand.php
 ├── config/
 │   └── archonflow.php
 ├── tests/

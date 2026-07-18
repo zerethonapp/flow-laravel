@@ -1,15 +1,15 @@
-# 🚀 archon-laravel
+# 🚀 flow-laravel
 
-> Laravel instrumentation adapter for **ArchonFlow**  
-> Capture real Laravel execution traces and feed them into the ArchonFlow engine.
+> Laravel instrumentation adapter for **Flow**  
+> Capture real Laravel execution traces and feed them into the Flow engine.
 
 ---
 
-## 🧭 What is `archon-laravel`?
+## 🧭 What is `flow-laravel`?
 
-`archon-laravel` is the first real instrumentation adapter for ArchonFlow.
+`flow-laravel` is the first real instrumentation adapter for Flow.
 
-Its job is to move ArchonFlow from:
+Its job is to move Flow from:
 
 - mock execution flows
 - synthetic timing
@@ -32,7 +32,7 @@ Provide the smallest practical Laravel package that can:
 - trace controller execution
 - capture database activity
 - support manual service tracing
-- emit ArchonFlow-compatible trace JSON
+- emit Flow-compatible trace JSON
 
 ---
 
@@ -55,9 +55,9 @@ This package is **not** responsible for:
 
 Those belong to:
 
-- `archon-core`
-- `archon-engine`
-- `archon-cli`
+- `flow-core`
+- `flow-engine`
+- `flow-cli`
 
 ---
 
@@ -92,7 +92,7 @@ Laravel Request
 → External calls are optionally wrapped
 → Trace is assembled
 → Trace JSON is written
-→ archon-cli analyzes the trace
+→ flow-cli analyzes the trace
 ```
 
 ---
@@ -115,7 +115,7 @@ src/
 ## ⚙️ Installation (planned)
 
 ```bash
-composer require archonflow/archon-laravel
+composer require zerethonapp/flow-laravel
 ```
 
 Publish config:
@@ -133,9 +133,9 @@ Register middleware or enable package config so each request can be traced.
 Example manual service instrumentation:
 
 ```php
-use ArchonLaravel\Facades\Archon;
+use Zerethon\Flow\Laravel\Facades\Flow;
 
-$result = Archon::trace('service', 'UserService.findUser', function () {
+$result = Flow::trace('service', 'UserService.findUser', function () {
     return app(UserService::class)->findUser();
 });
 ```
@@ -170,12 +170,12 @@ A captured trace should produce a structure similar to:
 
 Phase 3 v1 is successful when:
 
-- `archon-laravel` installs into a Laravel app
+- `flow-laravel` installs into a Laravel app
 - one real request generates a trace
 - controller and DB activity are captured
 - manual service tracing works
-- trace JSON is compatible with `archon-cli`
-- ArchonFlow is no longer mock-only
+- trace JSON is compatible with `flow-cli`
+- Flow is no longer mock-only
 
 ---
 
@@ -190,9 +190,9 @@ Phase 3 v1 is successful when:
 
 ## 🔥 Why This Matters
 
-This package is the breakthrough step for ArchonFlow.
+This package is the breakthrough step for Flow.
 
-It proves that ArchonFlow can operate on:
+It proves that Flow can operate on:
 
 > **real application execution**, not just simulated flow graphs
 
@@ -226,13 +226,13 @@ to:
 
 ## 💬 Final Statement
 
-`archon-laravel` is not just a package.
+`flow-laravel` is not just a package.
 
 It is the first bridge between:
 
 > **real Laravel execution**  
 > and  
-> **ArchonFlow intelligence**
+> **Flow intelligence**
 
 ---
 
