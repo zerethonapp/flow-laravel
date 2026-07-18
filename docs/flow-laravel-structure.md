@@ -56,7 +56,7 @@ flow-laravel/
 │   └── Commands/
 │       └── InstallFlowCommand.php
 ├── config/
-│   └── archonflow.php
+│   └── flow.php
 ├── tests/
 │   ├── Feature/
 │   │   └── CaptureTraceTest.php

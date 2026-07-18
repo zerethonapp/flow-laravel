@@ -67,19 +67,19 @@ final class CaptureFlowTrace
     private function shouldTrace(Request $request): bool
     {
         // Check if ArchonFlow is enabled
-        $enabled = config('archonflow.enabled');
+        $enabled = config('flow.enabled');
         if ($enabled === false) {
             return false;
         }
 
         // Check sample rate
-        $sampleRate = (float) config('archonflow.sample_rate', 1.0);
+        $sampleRate = (float) config('flow.sample_rate', 1.0);
         if ($sampleRate < 1.0 && (mt_rand() / mt_getrandmax()) > $sampleRate) {
             return false;
         }
 
         // Check if request matches any excluded patterns
-        $except = config('archonflow.except', []);
+        $except = config('flow.except', []);
         $requestPath = $request->path();
 
         foreach ($except as $pattern) {
@@ -96,6 +96,6 @@ final class CaptureFlowTrace
      */
     private function shouldCollect(string $source): bool
     {
-        return (bool) config("archonflow.sources.{$source}", false);
+        return (bool) config("flow.sources.{$source}", false);
     }
 }

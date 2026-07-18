@@ -121,7 +121,7 @@ composer require zerethonapp/flow-laravel
 Publish config:
 
 ```bash
-php artisan vendor:publish --tag=archonflow-config
+php artisan vendor:publish --tag=flow-config
 ```
 
 ---

@@ -13,8 +13,8 @@ class FlowTraceTest extends TestCase
     public function it_generates_real_trace()
     {
         // Ensure trace path exists
-        if (!is_dir(storage_path('archon-traces'))) {
-            mkdir(storage_path('archon-traces'), 0777, true);
+        if (!is_dir(storage_path('flow-traces'))) {
+            mkdir(storage_path('flow-traces'), 0777, true);
         }
 
         // Define test route dynamically
@@ -31,7 +31,7 @@ class FlowTraceTest extends TestCase
         $response->assertStatus(200);
 
         // Check trace file exists
-        $files = glob(storage_path('archon-traces/*.json'));
+        $files = glob(storage_path('flow-traces/*.json'));
 
         $this->assertNotEmpty($files, 'No trace file generated');
 

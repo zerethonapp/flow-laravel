@@ -22,11 +22,11 @@ final class CacheServicesCommand extends Command
 
     public function handle(ServiceDiscovery $discovery): int
     {
-        $namespaces = (array) config('archonflow.trace_namespaces', []);
-        $excludePrefixes = (array) config('archonflow.trace_namespace_excludes', []);
+        $namespaces = (array) config('flow.trace_namespaces', []);
+        $excludePrefixes = (array) config('flow.trace_namespace_excludes', []);
         $classes = $discovery->discoverAll($namespaces, $excludePrefixes);
 
-        $path = (string) config('archonflow.services_cache_path', base_path('.archon/services-cache.php'));
+        $path = (string) config('flow.services_cache_path', base_path('.zerethon/services-cache.php'));
         $directory = dirname($path);
 
         if (!is_dir($directory)) {

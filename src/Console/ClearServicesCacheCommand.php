@@ -14,7 +14,7 @@ final class ClearServicesCacheCommand extends Command
 
     public function handle(): int
     {
-        $path = (string) config('archonflow.services_cache_path', base_path('.archon/services-cache.php'));
+        $path = (string) config('flow.services_cache_path', base_path('.zerethon/services-cache.php'));
 
         if (is_file($path)) {
             unlink($path);

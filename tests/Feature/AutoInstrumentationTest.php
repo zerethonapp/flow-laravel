@@ -24,8 +24,8 @@ class AutoInstrumentationTest extends TestCase
     /** @test */
     public function it_auto_detects_external_http_calls_without_manual_tracing()
     {
-        if (!is_dir(storage_path('archon-traces'))) {
-            mkdir(storage_path('archon-traces'), 0777, true);
+        if (!is_dir(storage_path('flow-traces'))) {
+            mkdir(storage_path('flow-traces'), 0777, true);
         }
 
         Http::fake([
@@ -42,7 +42,7 @@ class AutoInstrumentationTest extends TestCase
         $response = $this->get('/flow-external-test');
         $response->assertStatus(200);
 
-        $files = glob(storage_path('archon-traces/*.json'));
+        $files = glob(storage_path('flow-traces/*.json'));
         $traceFile = end($files);
         $this->assertNotFalse($traceFile, 'No trace file generated');
 
@@ -56,8 +56,8 @@ class AutoInstrumentationTest extends TestCase
     /** @test */
     public function it_auto_detects_service_method_calls_without_manual_tracing()
     {
-        if (!is_dir(storage_path('archon-traces'))) {
-            mkdir(storage_path('archon-traces'), 0777, true);
+        if (!is_dir(storage_path('flow-traces'))) {
+            mkdir(storage_path('flow-traces'), 0777, true);
         }
 
         Route::middleware(['flow.trace'])->get('/flow-service-test', function () {
@@ -72,7 +72,7 @@ class AutoInstrumentationTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson(['result' => 'ok']);
 
-        $files = glob(storage_path('archon-traces/*.json'));
+        $files = glob(storage_path('flow-traces/*.json'));
         $traceFile = end($files);
         $this->assertNotFalse($traceFile, 'No trace file generated');
 
@@ -86,8 +86,8 @@ class AutoInstrumentationTest extends TestCase
     /** @test */
     public function it_auto_detects_services_resolved_through_an_interface_binding()
     {
-        if (!is_dir(storage_path('archon-traces'))) {
-            mkdir(storage_path('archon-traces'), 0777, true);
+        if (!is_dir(storage_path('flow-traces'))) {
+            mkdir(storage_path('flow-traces'), 0777, true);
         }
 
         Route::middleware(['flow.trace'])->get('/flow-interface-test', function () {
@@ -113,8 +113,8 @@ class AutoInstrumentationTest extends TestCase
     /** @test */
     public function it_does_not_double_wrap_a_service_that_already_self_instruments_via_traceable()
     {
-        if (!is_dir(storage_path('archon-traces'))) {
-            mkdir(storage_path('archon-traces'), 0777, true);
+        if (!is_dir(storage_path('flow-traces'))) {
+            mkdir(storage_path('flow-traces'), 0777, true);
         }
 
         Route::middleware(['flow.trace'])->get('/flow-traceable-test', function () {
@@ -145,7 +145,7 @@ class AutoInstrumentationTest extends TestCase
 
     private function latestTraceFile(): string
     {
-        $files = glob(storage_path('archon-traces/*.json'));
+        $files = glob(storage_path('flow-traces/*.json'));
         $traceFile = end($files);
         $this->assertNotFalse($traceFile, 'No trace file generated');
 

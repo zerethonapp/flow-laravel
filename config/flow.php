@@ -5,17 +5,17 @@ declare(strict_types=1);
 return [
     /*
     |--------------------------------------------------------------------------
-    | ArchonFlow Settings
+    | Flow Settings
     |--------------------------------------------------------------------------
     |
-    | ArchonFlow is enabled by default in non-production environments.
-    | You can override the value by setting ARCHONFLOW_ENABLED to true or false.
+    | Flow is enabled by default in non-production environments.
+    | You can override the value by setting FLOW_ENABLED to true or false.
     |
     | You can provide an array of URI patterns that must be excluded (eg. 'api/health')
     |
     */
 
-    'enabled' => env('ARCHONFLOW_ENABLED'),
+    'enabled' => env('FLOW_ENABLED'),
 
     /*
     |--------------------------------------------------------------------------
@@ -28,14 +28,14 @@ return [
     |
     */
 
-    'sample_rate' => (float) env('ARCHONFLOW_SAMPLE_RATE', 1.0),
+    'sample_rate' => (float) env('FLOW_SAMPLE_RATE', 1.0),
 
     /*
     |--------------------------------------------------------------------------
     | Environment Control
     |--------------------------------------------------------------------------
     |
-    | Specify which environments ArchonFlow should NOT run in.
+    | Specify which environments Flow should NOT run in.
     | By default, it's disabled in production and testing.
     |
     */
@@ -63,18 +63,18 @@ return [
     | Storage Settings
     |--------------------------------------------------------------------------
     |
-    | Configure where ArchonFlow stores trace data.
+    | Configure where Flow stores trace data.
     |
     */
 
-    // Persist traces in the same default location used by archon-cli.
-    'storage_path' => env('ARCHONFLOW_STORAGE_PATH', base_path('.archon/flow-history.json')),
+    // Persist traces in the same default location used by flow-cli.
+    'storage_path' => env('FLOW_STORAGE_PATH', base_path('.zerethon/flow-history.json')),
 
     // Simple one-trace-per-file output for functional verification.
-    'trace_directory' => env('ARCHONFLOW_TRACE_DIRECTORY', storage_path('archon-traces')),
+    'trace_directory' => env('FLOW_TRACE_DIRECTORY', storage_path('flow-traces')),
 
     // Keep the file bounded to avoid unbounded growth.
-    'max_records' => (int) env('ARCHONFLOW_MAX_RECORDS', 1000),
+    'max_records' => (int) env('FLOW_MAX_RECORDS', 1000),
 
     /*
     |--------------------------------------------------------------------------
@@ -86,11 +86,11 @@ return [
     */
 
     'sources' => [
-        'request' => env('ARCHONFLOW_SOURCES_REQUEST', true),
-        'controller' => env('ARCHONFLOW_SOURCES_CONTROLLER', true),
-        'database' => env('ARCHONFLOW_SOURCES_DATABASE', true),
-        'external' => env('ARCHONFLOW_SOURCES_EXTERNAL', true),
-        'service' => env('ARCHONFLOW_SOURCES_SERVICE', true),
+        'request' => env('FLOW_SOURCES_REQUEST', true),
+        'controller' => env('FLOW_SOURCES_CONTROLLER', true),
+        'database' => env('FLOW_SOURCES_DATABASE', true),
+        'external' => env('FLOW_SOURCES_EXTERNAL', true),
+        'service' => env('FLOW_SOURCES_SERVICE', true),
     ],
 
     /*
@@ -100,7 +100,7 @@ return [
     |
     | Classes under these namespaces are automatically wrapped in a timing
     | proxy the moment the container resolves them — no Traceable trait or
-    | Archon::trace() call needed in the class itself. Only classes actually
+    | Flow::trace() call needed in the class itself. Only classes actually
     | resolved through the container (constructor injection, app()->make(),
     | or bound to an interface they implement) are covered; manually `new`'d
     | instances are not.
@@ -150,13 +150,13 @@ return [
     |
     | The trace_namespaces scan is a filesystem walk + Reflection check per
     | class — real cost on every boot outside Octane. Run
-    | `php artisan archon:cache-services` (e.g. in your deploy pipeline) to
+    | `php artisan flow:cache-services` (e.g. in your deploy pipeline) to
     | pre-compute this list; when the file exists it's used instead of
-    | scanning live. Run `archon:clear-services-cache` to remove it.
+    | scanning live. Run `flow:clear-services-cache` to remove it.
     |
     */
 
-    'services_cache_path' => env('ARCHONFLOW_SERVICES_CACHE_PATH', base_path('.archon/services-cache.php')),
+    'services_cache_path' => env('FLOW_SERVICES_CACHE_PATH', base_path('.zerethon/services-cache.php')),
 
     /*
     |--------------------------------------------------------------------------
@@ -169,8 +169,8 @@ return [
 
     'options' => [
         'database' => [
-            'capture_sql' => env('ARCHONFLOW_OPTIONS_DATABASE_CAPTURE_SQL', false),
-            'capture_bindings' => env('ARCHONFLOW_OPTIONS_DATABASE_CAPTURE_BINDINGS', false),
+            'capture_sql' => env('FLOW_OPTIONS_DATABASE_CAPTURE_SQL', false),
+            'capture_bindings' => env('FLOW_OPTIONS_DATABASE_CAPTURE_BINDINGS', false),
         ],
     ],
 ];

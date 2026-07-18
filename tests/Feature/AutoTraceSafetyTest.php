@@ -28,8 +28,8 @@ class AutoTraceSafetyTest extends TestCase
     /** @test */
     public function it_discovers_deeply_nested_ddd_style_classes_without_explicit_per_folder_config()
     {
-        if (!is_dir(storage_path('archon-traces'))) {
-            mkdir(storage_path('archon-traces'), 0777, true);
+        if (!is_dir(storage_path('flow-traces'))) {
+            mkdir(storage_path('flow-traces'), 0777, true);
         }
 
         Route::middleware(['flow.trace'])->get('/flow-ddd-test', function () {
@@ -45,7 +45,7 @@ class AutoTraceSafetyTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson(['result' => 'issued']);
 
-        $files = glob(storage_path('archon-traces/*.json'));
+        $files = glob(storage_path('flow-traces/*.json'));
         $traceFile = end($files);
         $this->assertNotFalse($traceFile, 'No trace file generated');
 

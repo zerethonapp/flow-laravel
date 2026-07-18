@@ -24,21 +24,21 @@ final class FlowServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../../config/archonflow.php', 'archonflow');
+        $this->mergeConfigFrom(__DIR__ . '/../../config/flow.php', 'flow');
 
         $this->app->singleton(TraceCollector::class, static fn (): TraceCollector => new TraceCollector());
 
         $this->app->singleton(TraceWriter::class, static function (): TraceWriter {
-            $path = (string) config('archonflow.storage_path', base_path('.archon/flow-history.json'));
-            $traceDirectory = (string) config('archonflow.trace_directory', storage_path('archon-traces'));
-            $max = (int) config('archonflow.max_records', 1000);
+            $path = (string) config('flow.storage_path', base_path('.zerethon/flow-history.json'));
+            $traceDirectory = (string) config('flow.trace_directory', storage_path('flow-traces'));
+            $max = (int) config('flow.max_records', 1000);
             return new TraceWriter($path, $traceDirectory, $max);
         });
 
         $this->app->singleton(DatabaseHook::class);
 
         $this->app->singleton(TraceReader::class, static function (): TraceReader {
-            $path = (string) config('archonflow.storage_path', base_path('.archon/flow-history.json'));
+            $path = (string) config('flow.storage_path', base_path('.zerethon/flow-history.json'));
             return new TraceReader($path);
         });
 
@@ -60,8 +60,8 @@ final class FlowServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes(
-                [__DIR__ . '/../../config/archonflow.php' => config_path('archonflow.php')],
-                'archonflow-config',
+                [__DIR__ . '/../../config/flow.php' => config_path('flow.php')],
+                'flow-config',
             );
         }
 
@@ -80,7 +80,7 @@ final class FlowServiceProvider extends ServiceProvider
         // over plain HTTP. Deliberately not attached to the 'web'/'api'
         // middleware groups, so it's never traced itself and skips
         // session/CSRF overhead.
-        $router->get('/_archon/trace/{traceId}', function (string $traceId) {
+        $router->get('/_flow/trace/{traceId}', function (string $traceId) {
             $record = app(TraceReader::class)->find($traceId);
 
             if ($record === null) {
@@ -93,7 +93,7 @@ final class FlowServiceProvider extends ServiceProvider
         // Lets a caller browse everything this site has captured — not just
         // a trace it already knows the ID of (e.g. a dashboard "Traces" tab
         // for a project, independent of any specific audit scan run).
-        $router->get('/_archon/traces', function (\Illuminate\Http\Request $request) {
+        $router->get('/_flow/traces', function (\Illuminate\Http\Request $request) {
             $limit = max(1, min(200, (int) $request->query('limit', 50)));
             $records = app(TraceReader::class)->all($limit);
 
@@ -130,7 +130,7 @@ final class FlowServiceProvider extends ServiceProvider
 
         // Register database hook if enabled
         if ($this->shouldCollect('database')) {
-            $options = config('archonflow.options.database', []);
+            $options = config('flow.options.database', []);
             app(DatabaseHook::class)->register($options['capture_sql'] ?? false);
         }
 
@@ -143,10 +143,10 @@ final class FlowServiceProvider extends ServiceProvider
         // Auto-wrap classes under configured namespaces in a tracing proxy so
         // 'service' spans are captured without touching the class itself.
         if ($this->shouldCollect('service')) {
-            $namespaces = (array) config('archonflow.trace_namespaces', []);
+            $namespaces = (array) config('flow.trace_namespaces', []);
             if ($namespaces !== []) {
-                $cachePath = (string) config('archonflow.services_cache_path', base_path('.archon/services-cache.php'));
-                $excludePrefixes = (array) config('archonflow.trace_namespace_excludes', []);
+                $cachePath = (string) config('flow.services_cache_path', base_path('.zerethon/services-cache.php'));
+                $excludePrefixes = (array) config('flow.trace_namespace_excludes', []);
                 (new ServiceAutoTraceRegistrar())->register($this->app, $namespaces, $cachePath, $excludePrefixes);
             }
         }
@@ -158,7 +158,7 @@ final class FlowServiceProvider extends ServiceProvider
     public static function canBeEnabled(): bool
     {
         $app = app();
-        $exceptEnvironments = config('archonflow.except_environments', ['production', 'testing']);
+        $exceptEnvironments = config('flow.except_environments', ['production', 'testing']);
 
         return !$app->environment($exceptEnvironments);
     }
@@ -169,12 +169,12 @@ final class FlowServiceProvider extends ServiceProvider
     protected function shouldCollect(string $source): bool
     {
         // If the package is explicitly enabled in config, honor that
-        $enabled = config('archonflow.enabled');
+        $enabled = config('flow.enabled');
         if ($enabled !== null && !$enabled) {
             return false;
         }
 
         // Check if this specific source is enabled
-        return (bool) config("archonflow.sources.{$source}", false);
+        return (bool) config("flow.sources.{$source}", false);
     }
 }

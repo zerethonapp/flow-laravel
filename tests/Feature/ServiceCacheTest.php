@@ -26,10 +26,10 @@ class ServiceCacheTest extends TestCase
 
         // A live scan of this directory would find nothing — proves the
         // cache manifest is what's actually consulted, not a live walk.
-        $app['config']->set('archonflow.trace_namespaces', [
+        $app['config']->set('flow.trace_namespaces', [
             'Tests\\Support' => $this->emptyNamespaceDir,
         ]);
-        $app['config']->set('archonflow.services_cache_path', $this->cachePath);
+        $app['config']->set('flow.services_cache_path', $this->cachePath);
     }
 
     protected function tearDown(): void
@@ -48,8 +48,8 @@ class ServiceCacheTest extends TestCase
     /** @test */
     public function it_uses_the_cached_manifest_instead_of_scanning_the_filesystem_live()
     {
-        if (!is_dir(storage_path('archon-traces'))) {
-            mkdir(storage_path('archon-traces'), 0777, true);
+        if (!is_dir(storage_path('flow-traces'))) {
+            mkdir(storage_path('flow-traces'), 0777, true);
         }
 
         Route::middleware(['flow.trace'])->get('/flow-cache-test', function () {
@@ -61,7 +61,7 @@ class ServiceCacheTest extends TestCase
         $response = $this->get('/flow-cache-test');
         $response->assertStatus(200);
 
-        $files = glob(storage_path('archon-traces/*.json'));
+        $files = glob(storage_path('flow-traces/*.json'));
         $traceFile = end($files);
         $this->assertNotFalse($traceFile, 'No trace file generated');
 
@@ -79,12 +79,12 @@ class ServiceCacheTest extends TestCase
     {
         // Point at a real, scannable directory for this one so the command
         // has something genuine to discover.
-        config(['archonflow.trace_namespaces' => [
+        config(['flow.trace_namespaces' => [
             'Tests\\Support' => __DIR__ . '/../Support',
         ]]);
 
         $writtenPath = sys_get_temp_dir() . '/archon-cache-command-' . uniqid() . '.php';
-        config(['archonflow.services_cache_path' => $writtenPath]);
+        config(['flow.services_cache_path' => $writtenPath]);
 
         try {
             $this->artisan('flow:cache-services')->assertExitCode(0);

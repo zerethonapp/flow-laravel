@@ -21,7 +21,7 @@ class TraceCorrelationTest extends TestCase
         $traceId = $response->headers->get('X-Flow-Trace-Id');
         $this->assertNotEmpty($traceId);
 
-        $traceResponse = $this->get("/_archon/trace/{$traceId}");
+        $traceResponse = $this->get("/_flow/trace/{$traceId}");
         $traceResponse->assertStatus(200);
         $traceResponse->assertJsonPath('traceId', $traceId);
 
@@ -33,7 +33,7 @@ class TraceCorrelationTest extends TestCase
     /** @test */
     public function it_returns_404_for_an_unknown_trace_id()
     {
-        $response = $this->get('/_archon/trace/does-not-exist');
+        $response = $this->get('/_flow/trace/does-not-exist');
 
         $response->assertStatus(404);
     }
@@ -51,7 +51,7 @@ class TraceCorrelationTest extends TestCase
         $first = $this->get('/flow-list-test-one');
         $second = $this->get('/flow-list-test-two');
 
-        $response = $this->get('/_archon/traces');
+        $response = $this->get('/_flow/traces');
         $response->assertStatus(200);
 
         $traceIds = collect($response->json('traces'))->pluck('traceId');

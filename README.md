@@ -48,7 +48,7 @@ Your request takes **100ms**. Where's the bottleneck?
 - **Zero-config**: Automatically captures HTTP requests after install
 - Captures one real Laravel HTTP request as a Flow trace
 - Produces real nodes and edges from runtime execution
-- Stores trace records in `.archon/flow-history.json` (CLI-compatible format)
+- Stores trace records in `.zerethon/flow-history.json` (CLI-compatible format)
 - Supports manual service/external instrumentation for v1 practicality
 - Captures database query timings through Laravel's DB listener
 
@@ -87,13 +87,13 @@ curl http://your-app.test/any-route
 Check the trace:
 
 ```bash
-cat .archon/flow-history.json
+cat .zerethon/flow-history.json
 ```
 
 Or browse individual traces:
 
 ```bash
-ls storage/archon-traces/
+ls storage/flow-traces/
 ```
 
 ## Zero-Config Experience
@@ -103,7 +103,7 @@ By default, Flow:
 - ✅ Captures all HTTP requests (web + api)
 - ✅ Captures controller execution
 - ✅ Captures database queries
-- ✅ Writes traces to `.archon/flow-history.json`
+- ✅ Writes traces to `.zerethon/flow-history.json`
 - ✅ Only runs in non-production environments
 
 **No code changes required.**
@@ -113,16 +113,16 @@ By default, Flow:
 Publish config if you want to customize behavior:
 
 ```bash
-php artisan vendor:publish --tag=archonflow-config
+php artisan vendor:publish --tag=flow-config
 ```
 
-The published config file at `config/archonflow.php` provides fine-grained control:
+The published config file at `config/flow.php` provides fine-grained control:
 
 ### Enable/Disable
 
 ```php
 // Explicitly enable or disable (null = auto-detect based on environment)
-'enabled' => env('ARCHONFLOW_ENABLED'),
+'enabled' => env('FLOW_ENABLED'),
 
 // Environments where Flow should NOT run
 'except_environments' => ['production', 'testing'],
@@ -134,7 +134,7 @@ The published config file at `config/archonflow.php` provides fine-grained contr
 ],
 
 // Sample rate (0.0 - 1.0): trace only a percentage of requests
-'sample_rate' => env('ARCHONFLOW_SAMPLE_RATE', 1.0),
+'sample_rate' => env('FLOW_SAMPLE_RATE', 1.0),
 ```
 
 ### Sources
@@ -166,8 +166,8 @@ Configure behavior per source:
 ### Storage
 
 ```php
-'storage_path' => base_path('.archon/flow-history.json'),
-'trace_directory' => storage_path('archon-traces'),
+'storage_path' => base_path('.zerethon/flow-history.json'),
+'trace_directory' => storage_path('flow-traces'),
 'max_records' => 1000,
 ```
 
@@ -272,7 +272,7 @@ class OrderService
 
 Traces are appended to:
 
-- `.archon/flow-history.json` (default)
+- `.zerethon/flow-history.json` (default)
 
 Record shape matches Flow core storage:
 
@@ -283,7 +283,7 @@ Record shape matches Flow core storage:
 
 ## Analyze with existing CLI
 
-From the Laravel app root (where `.archon/flow-history.json` exists):
+From the Laravel app root (where `.zerethon/flow-history.json` exists):
 
 ```bash
 flow scan
@@ -324,7 +324,7 @@ flow scan
 
 ## Config
 
-`config/archonflow.php`
+`config/flow.php`
 
 - `enabled`
 - `storage_path`
