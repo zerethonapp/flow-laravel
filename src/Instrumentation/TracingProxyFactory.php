@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace ArchonFlow\Laravel\Instrumentation;
+namespace Zerethon\Flow\Laravel\Instrumentation;
 
-use ArchonFlow\Laravel\Support\Traceable;
+use Zerethon\Flow\Laravel\Support\Traceable;
 use Illuminate\Database\Eloquent\Model;
 use ReflectionClass;
 use ReflectionMethod;
@@ -36,12 +36,12 @@ final class TracingProxyFactory
                 return $instance;
             }
 
-            /** @var object&array{__archonCollector: TraceCollector, __archonLabelPrefix: string} $proxy */
+            /** @var object&array{__flowCollector: TraceCollector, __flowLabelPrefix: string} $proxy */
             $proxy = (new ReflectionClass($proxyClass))->newInstanceWithoutConstructor();
             self::copyState($instance, $proxy, $class);
 
-            $proxy->__archonCollector = $collector;
-            $proxy->__archonLabelPrefix = class_basename($class);
+            $proxy->__flowCollector = $collector;
+            $proxy->__flowLabelPrefix = class_basename($class);
 
             return $proxy;
         } catch (Throwable) {
@@ -60,7 +60,7 @@ final class TracingProxyFactory
         }
 
         // Classes that already self-instrument via the Traceable trait (or
-        // Archon::trace() inside a Traceable method) would otherwise get
+        // Flow::trace() inside a Traceable method) would otherwise get
         // double-wrapped: one span from this proxy, one from their own
         // manual call, both with the same label.
         if (in_array(Traceable::class, class_uses_recursive($class), true)) {
@@ -92,7 +92,7 @@ final class TracingProxyFactory
             return null;
         }
 
-        $proxyClass = 'ArchonTraceProxy_' . str_replace('\\', '_', $class) . '_' . substr(md5($class), 0, 8);
+        $proxyClass = 'FlowTraceProxy_' . str_replace('\\', '_', $class) . '_' . substr(md5($class), 0, 8);
 
         if (class_exists($proxyClass, false)) {
             return $proxyClass;
@@ -109,8 +109,8 @@ final class TracingProxyFactory
     private static function buildSource(string $proxyClass, string $class, array $methods): string
     {
         $source = "final class {$proxyClass} extends \\{$class} {\n";
-        $source .= "    public \\ArchonFlow\\Laravel\\Instrumentation\\TraceCollector \$__archonCollector;\n";
-        $source .= "    public string \$__archonLabelPrefix = '';\n";
+        $source .= "    public \\Zerethon\\Flow\\Laravel\\Instrumentation\\TraceCollector \$__flowCollector;\n";
+        $source .= "    public string \$__flowLabelPrefix = '';\n";
 
         foreach ($methods as $method) {
             $source .= self::buildMethod($method);
@@ -132,11 +132,11 @@ final class TracingProxyFactory
         return <<<PHP
     public function {$name}({$params}){$returnType}
     {
-        \$__span = \$this->__archonCollector->beginServiceSpan(\$this->__archonLabelPrefix . '.{$name}');
+        \$__span = \$this->__flowCollector->beginServiceSpan(\$this->__flowLabelPrefix . '.{$name}');
         try {
             {$returns}parent::{$name}({$forward});
         } finally {
-            \$this->__archonCollector->endServiceSpan(\$__span);
+            \$this->__flowCollector->endServiceSpan(\$__span);
         }
     }
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Support;
 
-use ArchonFlow\Laravel\Support\Traceable;
+use Zerethon\Flow\Laravel\Support\Traceable;
 
 /**
  * Self-instruments via the Traceable trait. Also falls under the

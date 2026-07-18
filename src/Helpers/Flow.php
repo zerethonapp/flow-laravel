@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace ArchonFlow\Laravel\Helpers;
+namespace Zerethon\Flow\Laravel\Helpers;
 
-use ArchonFlow\Laravel\Instrumentation\TraceCollector;
+use Zerethon\Flow\Laravel\Instrumentation\TraceCollector;
 
-final class Archon
+final class Flow
 {
     /**
      * @template T

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace ArchonFlow\Laravel\Support;
+namespace Zerethon\Flow\Laravel\Support;
 
-use ArchonFlow\Laravel\Instrumentation\TraceCollector;
+use Zerethon\Flow\Laravel\Instrumentation\TraceCollector;
 
 /**
  * Trait for adding tracing capabilities to any class

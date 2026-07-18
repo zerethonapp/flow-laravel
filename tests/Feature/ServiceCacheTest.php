@@ -52,13 +52,13 @@ class ServiceCacheTest extends TestCase
             mkdir(storage_path('archon-traces'), 0777, true);
         }
 
-        Route::middleware(['archon.trace'])->get('/archon-cache-test', function () {
+        Route::middleware(['flow.trace'])->get('/flow-cache-test', function () {
             $result = app(AutoTracedService::class)->run();
 
             return response()->json(['result' => $result]);
         });
 
-        $response = $this->get('/archon-cache-test');
+        $response = $this->get('/flow-cache-test');
         $response->assertStatus(200);
 
         $files = glob(storage_path('archon-traces/*.json'));
@@ -75,7 +75,7 @@ class ServiceCacheTest extends TestCase
     }
 
     /** @test */
-    public function archon_cache_services_command_writes_a_valid_manifest()
+    public function flow_cache_services_command_writes_a_valid_manifest()
     {
         // Point at a real, scannable directory for this one so the command
         // has something genuine to discover.
@@ -87,7 +87,7 @@ class ServiceCacheTest extends TestCase
         config(['archonflow.services_cache_path' => $writtenPath]);
 
         try {
-            $this->artisan('archon:cache-services')->assertExitCode(0);
+            $this->artisan('flow:cache-services')->assertExitCode(0);
 
             $this->assertFileExists($writtenPath);
 

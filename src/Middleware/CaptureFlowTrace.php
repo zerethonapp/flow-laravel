@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace ArchonFlow\Laravel\Middleware;
+namespace Zerethon\Flow\Laravel\Middleware;
 
-use ArchonFlow\Laravel\Instrumentation\Hooks\ControllerHook;
-use ArchonFlow\Laravel\Instrumentation\Hooks\RequestHook;
-use ArchonFlow\Laravel\Instrumentation\TraceWriter;
+use Zerethon\Flow\Laravel\Instrumentation\Hooks\ControllerHook;
+use Zerethon\Flow\Laravel\Instrumentation\Hooks\RequestHook;
+use Zerethon\Flow\Laravel\Instrumentation\TraceWriter;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-final class CaptureArchonTrace
+final class CaptureFlowTrace
 {
     public function __construct(
         private readonly RequestHook $requestHook,
@@ -55,7 +55,7 @@ final class CaptureArchonTrace
                 $this->traceWriter->write($record);
 
                 if ($response !== null) {
-                    $response->headers->set('X-Archon-Trace-Id', (string) $record['traceId']);
+                    $response->headers->set('X-Flow-Trace-Id', (string) $record['traceId']);
                 }
             }
         }

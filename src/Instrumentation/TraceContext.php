@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ArchonFlow\Laravel\Instrumentation;
+namespace Zerethon\Flow\Laravel\Instrumentation;
 
 final class TraceContext
 {

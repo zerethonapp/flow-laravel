@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace ArchonFlow\Laravel\Instrumentation\Hooks;
+namespace Zerethon\Flow\Laravel\Instrumentation\Hooks;
 
-use ArchonFlow\Laravel\Instrumentation\TraceCollector;
+use Zerethon\Flow\Laravel\Instrumentation\TraceCollector;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Http\Client\Events\ConnectionFailed;
 use Illuminate\Http\Client\Events\RequestSending;
@@ -13,7 +13,7 @@ use Illuminate\Http\Client\Events\ResponseReceived;
 /**
  * Auto-detects outbound HTTP calls made via the Http:: facade / HTTP client,
  * mirroring how Laravel Debugbar's HttpClientCollector works: no manual
- * Archon::trace('external', ...) call is required in application code.
+ * Flow::trace('external', ...) call is required in application code.
  */
 final class ExternalHttpHook
 {

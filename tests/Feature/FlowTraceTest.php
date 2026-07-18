@@ -5,9 +5,9 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-use ArchonLaravel\Facades\Archon;
+use Zerethon\Flow\Laravel\Facades\Flow;
 
-class ArchonTraceTest extends TestCase
+class FlowTraceTest extends TestCase
 {
     /** @test */
     public function it_generates_real_trace()
@@ -18,15 +18,15 @@ class ArchonTraceTest extends TestCase
         }
 
         // Define test route dynamically
-        Route::middleware(['archon.trace'])->get('/archon-test', function () {
-            return Archon::trace('service', 'TestService.run', function () {
+        Route::middleware(['flow.trace'])->get('/flow-test', function () {
+            return Flow::trace('service', 'TestService.run', function () {
                 DB::select('SELECT 1');
                 return response()->json(['ok' => true]);
             });
         });
 
         // Hit route
-        $response = $this->get('/archon-test');
+        $response = $this->get('/flow-test');
 
         $response->assertStatus(200);
 

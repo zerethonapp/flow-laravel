@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace ArchonFlow\Laravel\Console;
+namespace Zerethon\Flow\Laravel\Console;
 
-use ArchonFlow\Laravel\Instrumentation\ServiceDiscovery;
+use Zerethon\Flow\Laravel\Instrumentation\ServiceDiscovery;
 use Illuminate\Console\Command;
 
 /**
@@ -16,7 +16,7 @@ use Illuminate\Console\Command;
  */
 final class CacheServicesCommand extends Command
 {
-    protected $signature = 'archon:cache-services';
+    protected $signature = 'flow:cache-services';
 
     protected $description = 'Cache the auto-traced service class list so ArchonFlow skips the filesystem scan on every request';
 

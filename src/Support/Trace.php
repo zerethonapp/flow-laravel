@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ArchonFlow\Laravel\Support;
+namespace Zerethon\Flow\Laravel\Support;
 
 use Attribute;
 

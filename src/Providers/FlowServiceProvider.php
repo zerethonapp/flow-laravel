@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace ArchonFlow\Laravel\Providers;
+namespace Zerethon\Flow\Laravel\Providers;
 
-use ArchonFlow\Laravel\Console\CacheServicesCommand;
-use ArchonFlow\Laravel\Console\ClearServicesCacheCommand;
-use ArchonFlow\Laravel\Instrumentation\Hooks\DatabaseHook;
-use ArchonFlow\Laravel\Instrumentation\Hooks\ExternalHttpHook;
-use ArchonFlow\Laravel\Instrumentation\ServiceAutoTraceRegistrar;
-use ArchonFlow\Laravel\Instrumentation\TraceCollector;
-use ArchonFlow\Laravel\Instrumentation\TraceReader;
-use ArchonFlow\Laravel\Instrumentation\TraceWriter;
-use ArchonFlow\Laravel\Middleware\CaptureArchonTrace;
+use Zerethon\Flow\Laravel\Console\CacheServicesCommand;
+use Zerethon\Flow\Laravel\Console\ClearServicesCacheCommand;
+use Zerethon\Flow\Laravel\Instrumentation\Hooks\DatabaseHook;
+use Zerethon\Flow\Laravel\Instrumentation\Hooks\ExternalHttpHook;
+use Zerethon\Flow\Laravel\Instrumentation\ServiceAutoTraceRegistrar;
+use Zerethon\Flow\Laravel\Instrumentation\TraceCollector;
+use Zerethon\Flow\Laravel\Instrumentation\TraceReader;
+use Zerethon\Flow\Laravel\Instrumentation\TraceWriter;
+use Zerethon\Flow\Laravel\Middleware\CaptureFlowTrace;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 
-final class ArchonFlowServiceProvider extends ServiceProvider
+final class FlowServiceProvider extends ServiceProvider
 {
     /**
      * Register the service provider.
@@ -42,7 +42,7 @@ final class ArchonFlowServiceProvider extends ServiceProvider
             return new TraceReader($path);
         });
 
-        // Available regardless of except_environments — archon:cache-services
+        // Available regardless of except_environments — flow:cache-services
         // is precisely the tool you run in a production deploy pipeline to
         // pre-compute the manifest ServiceAutoTraceRegistrar reads at boot.
         if ($this->app->runningInConsole()) {
@@ -72,11 +72,11 @@ final class ArchonFlowServiceProvider extends ServiceProvider
 
         /** @var Router $router */
         $router = $this->app->make('router');
-        $router->aliasMiddleware('archon.trace', CaptureArchonTrace::class);
+        $router->aliasMiddleware('flow.trace', CaptureFlowTrace::class);
 
-        // Lets external tools (e.g. the archon-audit crawler) correlate a
-        // request they just made — via the X-Archon-Trace-Id response
-        // header set in CaptureArchonTrace — with the trace it produced,
+        // Lets external tools (e.g. the flow-audit crawler) correlate a
+        // request they just made — via the X-Flow-Trace-Id response
+        // header set in CaptureFlowTrace — with the trace it produced,
         // over plain HTTP. Deliberately not attached to the 'web'/'api'
         // middleware groups, so it's never traced itself and skips
         // session/CSRF overhead.
@@ -124,8 +124,8 @@ final class ArchonFlowServiceProvider extends ServiceProvider
 
         // Auto-register middleware globally for zero-config experience
         if ($this->shouldCollect('request')) {
-            $router->pushMiddlewareToGroup('web', CaptureArchonTrace::class);
-            $router->pushMiddlewareToGroup('api', CaptureArchonTrace::class);
+            $router->pushMiddlewareToGroup('web', CaptureFlowTrace::class);
+            $router->pushMiddlewareToGroup('api', CaptureFlowTrace::class);
         }
 
         // Register database hook if enabled
@@ -135,7 +135,7 @@ final class ArchonFlowServiceProvider extends ServiceProvider
         }
 
         // Auto-detect outbound HTTP calls (Http:: facade) — mirrors Debugbar's
-        // HttpClientCollector, no manual Archon::trace('external', ...) needed.
+        // HttpClientCollector, no manual Flow::trace('external', ...) needed.
         if ($this->shouldCollect('external')) {
             app(ExternalHttpHook::class)->register($this->app->make(Dispatcher::class));
         }

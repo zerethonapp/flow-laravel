@@ -16,7 +16,7 @@ class AutoInstrumentationTest extends TestCase
     {
         parent::defineEnvironment($app);
 
-        // Must be bound before ArchonFlowServiceProvider::boot() runs so
+        // Must be bound before FlowServiceProvider::boot() runs so
         // ServiceAutoTraceRegistrar sees it in Container::getBindings().
         $app->bind(GreetingServiceInterface::class, GreetingService::class);
     }
@@ -32,14 +32,14 @@ class AutoInstrumentationTest extends TestCase
             'example.test/*' => Http::response(['ok' => true], 200),
         ]);
 
-        Route::middleware(['archon.trace'])->get('/archon-external-test', function () {
-            // No Archon::trace('external', ...) wrapping here on purpose.
+        Route::middleware(['flow.trace'])->get('/flow-external-test', function () {
+            // No Flow::trace('external', ...) wrapping here on purpose.
             $response = Http::get('https://example.test/ping');
 
             return response()->json(['status' => $response->status()]);
         });
 
-        $response = $this->get('/archon-external-test');
+        $response = $this->get('/flow-external-test');
         $response->assertStatus(200);
 
         $files = glob(storage_path('archon-traces/*.json'));
@@ -60,15 +60,15 @@ class AutoInstrumentationTest extends TestCase
             mkdir(storage_path('archon-traces'), 0777, true);
         }
 
-        Route::middleware(['archon.trace'])->get('/archon-service-test', function () {
+        Route::middleware(['flow.trace'])->get('/flow-service-test', function () {
             // Resolved through the container; the class itself has no
-            // Traceable trait and no Archon::trace() call.
+            // Traceable trait and no Flow::trace() call.
             $result = app(AutoTracedService::class)->run();
 
             return response()->json(['result' => $result]);
         });
 
-        $response = $this->get('/archon-service-test');
+        $response = $this->get('/flow-service-test');
         $response->assertStatus(200);
         $response->assertJson(['result' => 'ok']);
 
@@ -90,7 +90,7 @@ class AutoInstrumentationTest extends TestCase
             mkdir(storage_path('archon-traces'), 0777, true);
         }
 
-        Route::middleware(['archon.trace'])->get('/archon-interface-test', function () {
+        Route::middleware(['flow.trace'])->get('/flow-interface-test', function () {
             // Type-hinted to the interface, never to GreetingService itself.
             // Container::extend() keyed only by the concrete class name
             // would never fire for this — see ServiceAutoTraceRegistrar.
@@ -99,7 +99,7 @@ class AutoInstrumentationTest extends TestCase
             return response()->json(['result' => $result]);
         });
 
-        $response = $this->get('/archon-interface-test');
+        $response = $this->get('/flow-interface-test');
         $response->assertStatus(200);
         $response->assertJson(['result' => 'hello']);
 
@@ -117,7 +117,7 @@ class AutoInstrumentationTest extends TestCase
             mkdir(storage_path('archon-traces'), 0777, true);
         }
 
-        Route::middleware(['archon.trace'])->get('/archon-traceable-test', function () {
+        Route::middleware(['flow.trace'])->get('/flow-traceable-test', function () {
             // Resolved through the container AND under trace_namespaces, so
             // it's a candidate for the auto-proxy too. It already
             // self-instruments via Traceable — must produce exactly one
@@ -127,7 +127,7 @@ class AutoInstrumentationTest extends TestCase
             return response()->json(['result' => $result]);
         });
 
-        $response = $this->get('/archon-traceable-test');
+        $response = $this->get('/flow-traceable-test');
         $response->assertStatus(200);
         $response->assertJson(['result' => 'ok']);
 

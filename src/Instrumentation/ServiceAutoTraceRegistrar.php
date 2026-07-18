@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ArchonFlow\Laravel\Instrumentation;
+namespace Zerethon\Flow\Laravel\Instrumentation;
 
 use Illuminate\Container\Container as ConcreteContainer;
 use Illuminate\Contracts\Container\Container;
@@ -15,7 +15,7 @@ use Illuminate\Contracts\Container\Container;
  *
  * Discovery is a filesystem walk + Reflection check per class, which is
  * real per-boot cost on classic PHP-FPM (re-run on every request, unlike
- * Octane). If a cache manifest built by `archon:cache-services` exists at
+ * Octane). If a cache manifest built by `flow:cache-services` exists at
  * $cachePath, it's used instead of scanning the filesystem live.
  */
 final class ServiceAutoTraceRegistrar

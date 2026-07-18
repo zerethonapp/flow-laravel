@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use ArchonFlow\Laravel\Instrumentation\TraceCollector;
-use ArchonFlow\Laravel\Instrumentation\TracingProxyFactory;
+use Zerethon\Flow\Laravel\Instrumentation\TraceCollector;
+use Zerethon\Flow\Laravel\Instrumentation\TracingProxyFactory;
 use Illuminate\Support\Facades\Route;
 use Tests\Support\Domain\Billing\InvoiceService;
 use Tests\Support\NoteModel;
@@ -32,7 +32,7 @@ class AutoTraceSafetyTest extends TestCase
             mkdir(storage_path('archon-traces'), 0777, true);
         }
 
-        Route::middleware(['archon.trace'])->get('/archon-ddd-test', function () {
+        Route::middleware(['flow.trace'])->get('/flow-ddd-test', function () {
             // Tests\Support\Domain\Billing\InvoiceService — three levels
             // deeper than the configured 'Tests\Support' namespace root.
             // No extra config entry was added for the Domain\Billing folder.
@@ -41,7 +41,7 @@ class AutoTraceSafetyTest extends TestCase
             return response()->json(['result' => $result]);
         });
 
-        $response = $this->get('/archon-ddd-test');
+        $response = $this->get('/flow-ddd-test');
         $response->assertStatus(200);
         $response->assertJson(['result' => 'issued']);
 

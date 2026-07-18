@@ -10,15 +10,15 @@ class TraceCorrelationTest extends TestCase
     /** @test */
     public function it_returns_a_trace_id_response_header_and_the_trace_is_fetchable_by_that_id()
     {
-        Route::middleware(['archon.trace'])->get('/archon-correlation-test', function () {
+        Route::middleware(['flow.trace'])->get('/flow-correlation-test', function () {
             return response()->json(['ok' => true]);
         });
 
-        $response = $this->get('/archon-correlation-test');
+        $response = $this->get('/flow-correlation-test');
         $response->assertStatus(200);
-        $response->assertHeader('X-Archon-Trace-Id');
+        $response->assertHeader('X-Flow-Trace-Id');
 
-        $traceId = $response->headers->get('X-Archon-Trace-Id');
+        $traceId = $response->headers->get('X-Flow-Trace-Id');
         $this->assertNotEmpty($traceId);
 
         $traceResponse = $this->get("/_archon/trace/{$traceId}");
@@ -41,29 +41,29 @@ class TraceCorrelationTest extends TestCase
     /** @test */
     public function it_lists_recent_traces_with_request_metadata_newest_first()
     {
-        Route::middleware(['archon.trace'])->get('/archon-list-test-one', function () {
+        Route::middleware(['flow.trace'])->get('/flow-list-test-one', function () {
             return response()->json(['ok' => true]);
         });
-        Route::middleware(['archon.trace'])->get('/archon-list-test-two', function () {
+        Route::middleware(['flow.trace'])->get('/flow-list-test-two', function () {
             return response()->json(['ok' => true]);
         });
 
-        $first = $this->get('/archon-list-test-one');
-        $second = $this->get('/archon-list-test-two');
+        $first = $this->get('/flow-list-test-one');
+        $second = $this->get('/flow-list-test-two');
 
         $response = $this->get('/_archon/traces');
         $response->assertStatus(200);
 
         $traceIds = collect($response->json('traces'))->pluck('traceId');
         $this->assertEquals(
-            $second->headers->get('X-Archon-Trace-Id'),
+            $second->headers->get('X-Flow-Trace-Id'),
             $traceIds->first(),
             'expected the most recently captured trace first',
         );
-        $this->assertTrue($traceIds->contains($first->headers->get('X-Archon-Trace-Id')));
+        $this->assertTrue($traceIds->contains($first->headers->get('X-Flow-Trace-Id')));
 
         $newest = collect($response->json('traces'))->first();
-        $this->assertSame('/archon-list-test-two', $newest['uri']);
+        $this->assertSame('/flow-list-test-two', $newest['uri']);
         $this->assertSame('success', $newest['status']);
     }
 }

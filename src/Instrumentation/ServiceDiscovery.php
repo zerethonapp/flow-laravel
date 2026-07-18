@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ArchonFlow\Laravel\Instrumentation;
+namespace Zerethon\Flow\Laravel\Instrumentation;
 
 use FilesystemIterator;
 use ReflectionClass;
@@ -13,7 +13,7 @@ use Throwable;
 /**
  * Walks configured namespace directories and returns every instantiable
  * class found. Shared by ServiceAutoTraceRegistrar (live scan, used when no
- * cache manifest exists) and the archon:cache-services console command
+ * cache manifest exists) and the flow:cache-services console command
  * (pre-computes the manifest so the live scan can be skipped on request).
  */
 final class ServiceDiscovery

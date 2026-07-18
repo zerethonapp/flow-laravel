@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace ArchonFlow\Laravel\Instrumentation;
+namespace Zerethon\Flow\Laravel\Instrumentation;
 
 /**
  * Looks a single trace up by ID from the rolling flow-history.json — the
  * file TraceWriter already appends every record to. Backs the
  * GET /_archon/trace/{traceId} endpoint that lets external tools (e.g. the
- * archon-audit crawler) correlate a request it just made with the trace
+ * flow-audit crawler) correlate a request it just made with the trace
  * that request produced, over HTTP rather than assuming filesystem access.
  */
 final class TraceReader
@@ -33,7 +33,7 @@ final class TraceReader
 
     /**
      * Newest-first, capped at $limit — backs GET /_archon/traces so a
-     * caller can browse everything archon-laravel has captured for this
+     * caller can browse everything flow-laravel has captured for this
      * site, not just a trace it already knows the ID of.
      *
      * @return list<array<string, mixed>>

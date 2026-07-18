@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use ArchonFlow\Laravel\Instrumentation\TraceCollector;
+use Zerethon\Flow\Laravel\Instrumentation\TraceCollector;
 
-if (!function_exists('archon')) {
-    function archon(): TraceCollector
+if (!function_exists('flow')) {
+    function flow(): TraceCollector
     {
         return app(TraceCollector::class);
     }

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace ArchonFlow\Laravel\Console;
+namespace Zerethon\Flow\Laravel\Console;
 
 use Illuminate\Console\Command;
 
 final class ClearServicesCacheCommand extends Command
 {
-    protected $signature = 'archon:clear-services-cache';
+    protected $signature = 'flow:clear-services-cache';
 
     protected $description = 'Remove the cached auto-traced service class manifest';
 

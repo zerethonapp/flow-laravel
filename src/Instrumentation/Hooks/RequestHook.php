@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace ArchonFlow\Laravel\Instrumentation\Hooks;
+namespace Zerethon\Flow\Laravel\Instrumentation\Hooks;
 
-use ArchonFlow\Laravel\Instrumentation\TraceCollector;
+use Zerethon\Flow\Laravel\Instrumentation\TraceCollector;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
