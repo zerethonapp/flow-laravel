@@ -16,10 +16,16 @@ final class TraceCollector
 
     public function startRequest(Request $request): void
     {
+        $uri = $request->getRequestUri();
+
+        if ($this->maskingEnabled()) {
+            $uri = Masker::maskRequestUri($uri, $request->route()?->parameters() ?? []);
+        }
+
         $this->context = new TraceContext();
         $this->context->start([
             'method' => $request->getMethod(),
-            'uri' => $request->getRequestUri(),
+            'uri' => $uri,
             'route' => $request->route()?->uri(),
         ]);
     }
@@ -77,7 +83,7 @@ final class TraceCollector
             id: null,
             type: 'service',
             label: $label,
-            meta: $meta,
+            meta: $this->maskingEnabled() ? Masker::maskArray($meta) : $meta,
         );
     }
 
@@ -152,7 +158,7 @@ final class TraceCollector
             type: 'external',
             label: $label,
             durationMs: max(1, $durationMs),
-            meta: $meta,
+            meta: $this->maskingEnabled() ? Masker::maskArray($meta) : $meta,
         );
     }
 
@@ -169,10 +175,21 @@ final class TraceCollector
             'http_status' => $response?->getStatusCode() ?? 500,
         ];
 
+        // Exception messages are free text — only the light email-shaped
+        // check applies here (Masker::maskString), not the full key-based
+        // maskArray() logic, since there's no structured key to match
+        // against. A message that happens to embed a raw secret (rather
+        // than an email address) is not caught by this — flagged as a
+        // known limitation, not silently assumed safe.
+        $exceptionMessage = $exception?->getMessage();
+        if ($exceptionMessage !== null && $this->maskingEnabled()) {
+            $exceptionMessage = Masker::maskString($exceptionMessage);
+        }
+
         if ($exception !== null) {
             $requestMeta['exception'] = [
                 'type' => $exception::class,
-                'message' => $exception->getMessage(),
+                'message' => $exceptionMessage,
             ];
         }
 
@@ -180,7 +197,7 @@ final class TraceCollector
 
         $record = $this->context->toFlowRecord([
             'status' => $exception === null ? 'success' : 'error',
-            'errors' => $exception === null ? [] : [$exception->getMessage()],
+            'errors' => $exception === null ? [] : [$exceptionMessage],
         ]);
 
         $this->context = null;
@@ -210,7 +227,7 @@ final class TraceCollector
             id: null,
             type: $type,
             label: $label,
-            meta: $meta,
+            meta: $this->maskingEnabled() ? Masker::maskArray($meta) : $meta,
         );
 
         try {
@@ -218,6 +235,20 @@ final class TraceCollector
         } finally {
             $this->context->endNode($nodeId);
         }
+    }
+
+    /**
+     * Config is read directly here (rather than threaded through as a
+     * constructor/method parameter, the way recordDatabaseQuery()'s
+     * $captureSql is) because traceService()/traceExternal()/trace() are
+     * called directly by application code with no intermediary that could
+     * inject config — CaptureFlowTrace's other config() calls
+     * (flow.enabled, flow.sample_rate) are the same established pattern in
+     * this package, not a new one.
+     */
+    private function maskingEnabled(): bool
+    {
+        return (bool) config('flow.options.mask_sensitive_data', true);
     }
 
     private function formatControllerLabel(string $action): string

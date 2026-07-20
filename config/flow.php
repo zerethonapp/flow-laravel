@@ -172,5 +172,17 @@ return [
             'capture_sql' => env('FLOW_OPTIONS_DATABASE_CAPTURE_SQL', false),
             'capture_bindings' => env('FLOW_OPTIONS_DATABASE_CAPTURE_BINDINGS', false),
         ],
+
+        // On by default (unlike capture_sql) — this is a safety default,
+        // not an opt-in feature. Masks sensitive-named query-string values
+        // and route-parameter values (e.g. a password-reset {token}) in
+        // captured request/external-call URLs, sensitive-keyed entries in
+        // manually-supplied trace meta (Flow::traceService()/traceExternal()),
+        // and email-shaped strings wherever they appear. Does not touch SQL
+        // text (see capture_sql above) or non-email-shaped exception message
+        // content — see src/Instrumentation/Masker.php's own doc comment for
+        // exactly what is and isn't covered. Set to false only if you need
+        // raw, unmasked values for debugging and understand the trade-off.
+        'mask_sensitive_data' => env('FLOW_OPTIONS_MASK_SENSITIVE_DATA', true),
     ],
 ];
