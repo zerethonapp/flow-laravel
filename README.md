@@ -108,6 +108,34 @@ By default, Flow:
 
 **No code changes required.**
 
+## Connected Mode (Push Traces to Flow)
+
+By default, traces only ever land in the local `.zerethon/flow-history.json`
+file above (**Offline mode**) — nothing leaves your machine/server unless you
+configure Connected mode. To have every captured trace pushed automatically
+to Flow, get a project's credentials from the Flow dashboard (shown once, at
+project creation) and add them to `.env`:
+
+```env
+FLOW_SERVER=https://flow-api.zerethon.com
+FLOW_PROJECT_ID=<project uuid>
+FLOW_SECRET_KEY=flw_sk_...
+```
+
+Then verify it's wired up correctly:
+
+```bash
+php artisan flow:install
+```
+
+That's it — no other code changes. Traces still write to the local file too
+(Connected mode is additive, not a replacement); if any of the three env
+vars are missing, Flow just skips the push silently and behaves exactly as
+it did before. Building an adapter for a different language/framework?
+`flow-docs/ADAPTER_PROTOCOL.md` documents the exact wire contract this
+package's push implements — it's plain HTTP+JSON, no PHP/Laravel-specific
+mechanism involved.
+
 ## Configuration (Optional)
 
 Publish config if you want to customize behavior:
