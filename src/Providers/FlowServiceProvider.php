@@ -6,13 +6,16 @@ namespace Zerethon\Flow\Laravel\Providers;
 
 use Zerethon\Flow\Laravel\Console\CacheServicesCommand;
 use Zerethon\Flow\Laravel\Console\ClearServicesCacheCommand;
+use Zerethon\Flow\Laravel\Console\InstallCommand;
 use Zerethon\Flow\Laravel\Instrumentation\Hooks\DatabaseHook;
 use Zerethon\Flow\Laravel\Instrumentation\Hooks\ExternalHttpHook;
 use Zerethon\Flow\Laravel\Instrumentation\ServiceAutoTraceRegistrar;
 use Zerethon\Flow\Laravel\Instrumentation\TraceCollector;
-use Zerethon\Flow\Laravel\Instrumentation\TraceReader;
 use Zerethon\Flow\Laravel\Instrumentation\TraceWriter;
 use Zerethon\Flow\Laravel\Middleware\CaptureFlowTrace;
+use Zerethon\Flow\Laravel\Transport\HttpPushTransport;
+use Zerethon\Flow\Laravel\Transport\NullTransport;
+use Zerethon\Flow\Laravel\Transport\TraceTransport;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
@@ -37,9 +40,22 @@ final class FlowServiceProvider extends ServiceProvider
 
         $this->app->singleton(DatabaseHook::class);
 
-        $this->app->singleton(TraceReader::class, static function (): TraceReader {
-            $path = (string) config('flow.storage_path', base_path('.zerethon/flow-history.json'));
-            return new TraceReader($path);
+        $this->app->singleton(TraceTransport::class, static function (): TraceTransport {
+            $server = (string) config('flow.connected.server', '');
+            $projectId = (string) config('flow.connected.project_id', '');
+            $secretKey = (string) config('flow.connected.secret_key', '');
+
+            if ($server === '' || $projectId === '' || $secretKey === '') {
+                return new NullTransport();
+            }
+
+            return new HttpPushTransport(
+                $server,
+                $projectId,
+                $secretKey,
+                (string) config('flow.connected.version', '1.0'),
+                (string) config('flow.connected.environment', 'production'),
+            );
         });
 
         // Available regardless of except_environments — flow:cache-services
@@ -49,6 +65,7 @@ final class FlowServiceProvider extends ServiceProvider
             $this->commands([
                 CacheServicesCommand::class,
                 ClearServicesCacheCommand::class,
+                InstallCommand::class,
             ]);
         }
     }
@@ -65,7 +82,7 @@ final class FlowServiceProvider extends ServiceProvider
             );
         }
 
-        // Early return if ArchonFlow cannot be enabled
+        // Early return if Flow cannot be enabled
         if (!static::canBeEnabled()) {
             return;
         }
@@ -73,54 +90,6 @@ final class FlowServiceProvider extends ServiceProvider
         /** @var Router $router */
         $router = $this->app->make('router');
         $router->aliasMiddleware('flow.trace', CaptureFlowTrace::class);
-
-        // Lets external tools (e.g. the flow-audit crawler) correlate a
-        // request they just made — via the X-Flow-Trace-Id response
-        // header set in CaptureFlowTrace — with the trace it produced,
-        // over plain HTTP. Deliberately not attached to the 'web'/'api'
-        // middleware groups, so it's never traced itself and skips
-        // session/CSRF overhead.
-        $router->get('/_flow/trace/{traceId}', function (string $traceId) {
-            $record = app(TraceReader::class)->find($traceId);
-
-            if ($record === null) {
-                return response()->json(['error' => 'trace not found'], 404);
-            }
-
-            return response()->json($record);
-        });
-
-        // Lets a caller browse everything this site has captured — not just
-        // a trace it already knows the ID of (e.g. a dashboard "Traces" tab
-        // for a project, independent of any specific audit scan run).
-        $router->get('/_flow/traces', function (\Illuminate\Http\Request $request) {
-            $limit = max(1, min(200, (int) $request->query('limit', 50)));
-            $records = app(TraceReader::class)->all($limit);
-
-            $summaries = array_map(static function (array $record): array {
-                $requestNode = null;
-                foreach (($record['flow']['nodes'] ?? []) as $node) {
-                    if (is_array($node) && ($node['type'] ?? null) === 'request') {
-                        $requestNode = $node;
-                        break;
-                    }
-                }
-                $meta = is_array($requestNode['meta'] ?? null) ? $requestNode['meta'] : [];
-
-                return [
-                    'traceId' => $record['traceId'] ?? null,
-                    'timestamp' => $record['timestamp'] ?? null,
-                    'method' => $meta['method'] ?? null,
-                    'uri' => $meta['uri'] ?? null,
-                    'route' => $meta['route'] ?? null,
-                    'totalTime' => $record['result']['totalTime'] ?? null,
-                    'nodeCount' => $record['result']['nodeCount'] ?? null,
-                    'status' => $record['result']['status'] ?? null,
-                ];
-            }, $records);
-
-            return response()->json(['traces' => $summaries]);
-        });
 
         // Auto-register middleware globally for zero-config experience
         if ($this->shouldCollect('request')) {
@@ -153,7 +122,7 @@ final class FlowServiceProvider extends ServiceProvider
     }
 
     /**
-     * Check if ArchonFlow can be enabled based on environment
+     * Check if Flow can be enabled based on environment
      */
     public static function canBeEnabled(): bool
     {

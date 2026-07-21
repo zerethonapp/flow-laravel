@@ -7,6 +7,7 @@ namespace Zerethon\Flow\Laravel\Middleware;
 use Zerethon\Flow\Laravel\Instrumentation\Hooks\ControllerHook;
 use Zerethon\Flow\Laravel\Instrumentation\Hooks\RequestHook;
 use Zerethon\Flow\Laravel\Instrumentation\TraceWriter;
+use Zerethon\Flow\Laravel\Transport\TraceTransport;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,11 +19,12 @@ final class CaptureFlowTrace
         private readonly RequestHook $requestHook,
         private readonly ControllerHook $controllerHook,
         private readonly TraceWriter $traceWriter,
+        private readonly TraceTransport $transport,
     ) {}
 
     public function handle(Request $request, Closure $next): Response
     {
-        // Check if ArchonFlow is enabled and if request should be traced
+        // Check if Flow is enabled and if request should be traced
         if (!$this->shouldTrace($request)) {
             /** @var Response $response */
             $response = $next($request);
@@ -53,6 +55,7 @@ final class CaptureFlowTrace
             $record = $this->requestHook->finish($response, $exception);
             if ($record !== null) {
                 $this->traceWriter->write($record);
+                $this->transport->send($record);
 
                 if ($response !== null) {
                     $response->headers->set('X-Flow-Trace-Id', (string) $record['traceId']);
@@ -66,7 +69,7 @@ final class CaptureFlowTrace
      */
     private function shouldTrace(Request $request): bool
     {
-        // Check if ArchonFlow is enabled
+        // Check if Flow is enabled
         $enabled = config('flow.enabled');
         if ($enabled === false) {
             return false;

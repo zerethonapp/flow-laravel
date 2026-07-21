@@ -3,12 +3,15 @@
 namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Route;
+use Tests\Support\ReadsLocalTraceFile;
 use Tests\TestCase;
 
 class TraceCorrelationTest extends TestCase
 {
+    use ReadsLocalTraceFile;
+
     /** @test */
-    public function it_returns_a_trace_id_response_header_and_the_trace_is_fetchable_by_that_id()
+    public function it_returns_a_trace_id_header_and_writes_the_matching_record_to_flow_history_json()
     {
         Route::middleware(['flow.trace'])->get('/flow-correlation-test', function () {
             return response()->json(['ok' => true]);
@@ -21,25 +24,17 @@ class TraceCorrelationTest extends TestCase
         $traceId = $response->headers->get('X-Flow-Trace-Id');
         $this->assertNotEmpty($traceId);
 
-        $traceResponse = $this->get("/_flow/trace/{$traceId}");
-        $traceResponse->assertStatus(200);
-        $traceResponse->assertJsonPath('traceId', $traceId);
+        $record = $this->readTraceRecord($traceId);
+        $this->assertNotNull($record);
+        $this->assertSame($traceId, $record['traceId']);
 
-        $types = collect($traceResponse->json('flow.nodes'))->pluck('type');
+        $types = collect($record['flow']['nodes'])->pluck('type');
         $this->assertTrue($types->contains('request'));
         $this->assertTrue($types->contains('controller'));
     }
 
     /** @test */
-    public function it_returns_404_for_an_unknown_trace_id()
-    {
-        $response = $this->get('/_flow/trace/does-not-exist');
-
-        $response->assertStatus(404);
-    }
-
-    /** @test */
-    public function it_lists_recent_traces_with_request_metadata_newest_first()
+    public function it_appends_multiple_captures_to_flow_history_json_newest_last()
     {
         Route::middleware(['flow.trace'])->get('/flow-list-test-one', function () {
             return response()->json(['ok' => true]);
@@ -51,19 +46,10 @@ class TraceCorrelationTest extends TestCase
         $first = $this->get('/flow-list-test-one');
         $second = $this->get('/flow-list-test-two');
 
-        $response = $this->get('/_flow/traces');
-        $response->assertStatus(200);
+        $records = $this->readAllTraceRecords();
+        $traceIds = collect($records)->pluck('traceId');
 
-        $traceIds = collect($response->json('traces'))->pluck('traceId');
-        $this->assertEquals(
-            $second->headers->get('X-Flow-Trace-Id'),
-            $traceIds->first(),
-            'expected the most recently captured trace first',
-        );
         $this->assertTrue($traceIds->contains($first->headers->get('X-Flow-Trace-Id')));
-
-        $newest = collect($response->json('traces'))->first();
-        $this->assertSame('/flow-list-test-two', $newest['uri']);
-        $this->assertSame('success', $newest['status']);
+        $this->assertSame($second->headers->get('X-Flow-Trace-Id'), $traceIds->last());
     }
 }

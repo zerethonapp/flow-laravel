@@ -78,6 +78,31 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Connected Mode
+    |--------------------------------------------------------------------------
+    |
+    | Set all three to push every captured trace to Flow API over HTTPS,
+    | authenticated as this project (Authorization: Bearer FLOW_SECRET_KEY,
+    | X-Flow-Project: FLOW_PROJECT_ID) — see Transport/HttpPushTransport.php.
+    | Left unset, Flow falls back to a no-op transport: traces still get
+    | written to storage_path/trace_directory above for Offline-mode manual
+    | upload through flow-dashboard, they just aren't pushed automatically.
+    | Get these three values from the project's one-time credential reveal
+    | in flow-dashboard when the project is created, then run
+    | `php artisan flow:install` to verify them.
+    |
+    */
+
+    'connected' => [
+        'server' => env('FLOW_SERVER'),
+        'project_id' => env('FLOW_PROJECT_ID'),
+        'secret_key' => env('FLOW_SECRET_KEY'),
+        'version' => '1.0',
+        'environment' => env('APP_ENV', 'production'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Source Collectors
     |--------------------------------------------------------------------------
     |

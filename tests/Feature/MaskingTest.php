@@ -3,11 +3,14 @@
 namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Route;
+use Tests\Support\ReadsLocalTraceFile;
 use Tests\TestCase;
 use Zerethon\Flow\Laravel\Facades\Flow;
 
 class MaskingTest extends TestCase
 {
+    use ReadsLocalTraceFile;
+
     /** @test */
     public function it_masks_a_sensitive_query_string_value_in_the_captured_request_uri_by_default()
     {
@@ -19,9 +22,9 @@ class MaskingTest extends TestCase
         $response->assertStatus(200);
 
         $traceId = $response->headers->get('X-Flow-Trace-Id');
-        $traceResponse = $this->get("/_flow/trace/{$traceId}");
+        $record = $this->readTraceRecord($traceId);
 
-        $requestNode = collect($traceResponse->json('flow.nodes'))->firstWhere('type', 'request');
+        $requestNode = collect($record['flow']['nodes'])->firstWhere('type', 'request');
 
         $this->assertStringNotContainsString('super-secret-value', $requestNode['meta']['uri']);
         $this->assertStringContainsString('token=', $requestNode['meta']['uri']);
@@ -39,9 +42,9 @@ class MaskingTest extends TestCase
 
         $response = $this->get('/flow-mask-disabled-test?token=super-secret-value');
         $traceId = $response->headers->get('X-Flow-Trace-Id');
-        $traceResponse = $this->get("/_flow/trace/{$traceId}");
+        $record = $this->readTraceRecord($traceId);
 
-        $requestNode = collect($traceResponse->json('flow.nodes'))->firstWhere('type', 'request');
+        $requestNode = collect($record['flow']['nodes'])->firstWhere('type', 'request');
 
         $this->assertStringContainsString('super-secret-value', $requestNode['meta']['uri']);
     }
@@ -57,9 +60,9 @@ class MaskingTest extends TestCase
 
         $response = $this->get('/flow-mask-meta-test');
         $traceId = $response->headers->get('X-Flow-Trace-Id');
-        $traceResponse = $this->get("/_flow/trace/{$traceId}");
+        $record = $this->readTraceRecord($traceId);
 
-        $externalNode = collect($traceResponse->json('flow.nodes'))->firstWhere('type', 'external');
+        $externalNode = collect($record['flow']['nodes'])->firstWhere('type', 'external');
 
         $this->assertSame('****', $externalNode['meta']['apiKey']);
         $this->assertSame('partner', $externalNode['meta']['endpoint']);
