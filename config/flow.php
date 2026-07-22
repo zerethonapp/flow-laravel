@@ -8,7 +8,9 @@ return [
     | Flow Settings
     |--------------------------------------------------------------------------
     |
-    | Flow is enabled by default in non-production environments.
+    | Flow is enabled by default in every environment except `testing`.
+    | Connected mode (see below) exists specifically to observe real
+    | production traffic, so production is not excluded by default.
     | You can override the value by setting FLOW_ENABLED to true or false.
     |
     | You can provide an array of URI patterns that must be excluded (eg. 'api/health')
@@ -36,11 +38,14 @@ return [
     |--------------------------------------------------------------------------
     |
     | Specify which environments Flow should NOT run in.
-    | By default, it's disabled in production and testing.
+    | By default, it's disabled only in `testing` — production is
+    | intentionally included since Connected mode's whole purpose is
+    | observing real production traffic. Add 'production' (or 'staging',
+    | etc.) back here if you want Flow off in a specific environment.
     |
     */
 
-    'except_environments' => ['production', 'testing'],
+    'except_environments' => ['testing'],
 
     /*
     |--------------------------------------------------------------------------

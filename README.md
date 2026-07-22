@@ -76,7 +76,7 @@ Not included yet:
 composer require zerethonapp/flow-laravel
 ```
 
-**That's it!** Flow will now automatically trace HTTP requests in non-production environments.
+**That's it!** Flow will now automatically trace HTTP requests in every environment except `testing`.
 
 Hit any route:
 
@@ -104,7 +104,7 @@ By default, Flow:
 - ✅ Captures controller execution
 - ✅ Captures database queries
 - ✅ Writes traces to `.zerethon/flow-history.json`
-- ✅ Only runs in non-production environments
+- ✅ Runs everywhere except `testing` (production included by default — see Connected Mode below)
 
 **No code changes required.**
 
@@ -133,16 +133,14 @@ That's it — no other code changes. Traces still write to the local file too
 vars are missing, Flow just skips the push silently and behaves exactly as
 it did before.
 
-**If you're pushing from a real deployed environment** (the main reason to
-use Connected mode at all), you also need `except_environments` (see
-Configuration below) to not include that environment — it defaults to
-`['production', 'testing']`, and this check runs *before* anything else in
-`FlowServiceProvider::boot()`. With the default config, setting the three
-`FLOW_*` env vars above on a production server does nothing at all: no
-error, no trace, no push — the middleware never even gets registered.
-Publish the config (`php artisan vendor:publish --tag=flow-config`) and
-remove `'production'` from `except_environments` if you want Connected mode
-active there.
+Production is enabled by default (`except_environments` only excludes
+`testing`, see Configuration below) — the three `FLOW_*` env vars above are
+all that's needed on a real deployed environment. If you want Flow off in a
+*specific* environment (e.g. a staging server you don't want traced),
+publish the config (`php artisan vendor:publish --tag=flow-config`) and add
+that environment to `except_environments` — this check runs before
+anything else in `FlowServiceProvider::boot()`, so an excluded environment
+gets zero overhead, not just a silenced push.
 
 Building an adapter for a different language/framework?
 `flow-docs/ADAPTER_PROTOCOL.md` documents the exact wire contract this
@@ -166,7 +164,7 @@ The published config file at `config/flow.php` provides fine-grained control:
 'enabled' => env('FLOW_ENABLED'),
 
 // Environments where Flow should NOT run
-'except_environments' => ['production', 'testing'],
+'except_environments' => ['testing'],
 
 // URI patterns to exclude from tracing
 'except' => [
