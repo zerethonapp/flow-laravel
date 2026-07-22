@@ -7,7 +7,8 @@
 [![Tests](https://github.com/zerethonapp/flow-laravel/actions/workflows/tests.yml/badge.svg)](https://github.com/zerethonapp/flow-laravel/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![PHP](https://img.shields.io/badge/php-%5E8.1-777BB4.svg)](composer.json)
-<!-- Add a Packagist version/downloads badge here once the package is listed on packagist.org — see RELEASE.md. -->
+[![Packagist Version](https://img.shields.io/packagist/v/zerethonapp/flow-laravel.svg)](https://packagist.org/packages/zerethonapp/flow-laravel)
+[![Packagist Downloads](https://img.shields.io/packagist/dt/zerethonapp/flow-laravel.svg)](https://packagist.org/packages/zerethonapp/flow-laravel)
 
 Laravel instrumentation adapter for Flow Phase 3 & 4 (real runtime traces).
 
@@ -94,14 +95,6 @@ Not included yet:
 ```bash
 composer require zerethonapp/flow-laravel
 ```
-
-> This repo is public and tagged (`v0.1.0`); Packagist listing is in
-> progress. Until it's live, add a VCS repository entry pointing at this
-> GitHub URL to your app's `composer.json` first:
-> ```json
-> "repositories": [{ "type": "vcs", "url": "https://github.com/zerethonapp/flow-laravel" }]
-> ```
-> Then `composer require zerethonapp/flow-laravel:^0.1` works normally.
 
 **That's it!** Flow will now automatically trace HTTP requests in every environment except `testing`.
 
