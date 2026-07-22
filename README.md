@@ -11,6 +11,11 @@
 
 Laravel instrumentation adapter for Flow Phase 3 & 4 (real runtime traces).
 
+**Want to see it running before installing anything?**
+[flow-laravel-demo](https://github.com/zerethonapp/flow-laravel-demo) is a
+runnable Laravel app with 7 instrumented demo routes — clone it, `composer
+install`, and hit a route to see a real captured trace.
+
 Contributing? See [CONTRIBUTING.md](CONTRIBUTING.md). Found a security
 issue? See [SECURITY.md](SECURITY.md), not a public issue. Release history:
 [CHANGELOG.md](CHANGELOG.md). This project follows the
