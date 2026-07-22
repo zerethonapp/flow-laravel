@@ -76,6 +76,14 @@ Not included yet:
 composer require zerethonapp/flow-laravel
 ```
 
+> This repo is public and tagged (`v0.1.0`); Packagist listing is in
+> progress. Until it's live, add a VCS repository entry pointing at this
+> GitHub URL to your app's `composer.json` first:
+> ```json
+> "repositories": [{ "type": "vcs", "url": "https://github.com/zerethonapp/flow-laravel" }]
+> ```
+> Then `composer require zerethonapp/flow-laravel:^0.1` works normally.
+
 **That's it!** Flow will now automatically trace HTTP requests in every environment except `testing`.
 
 Hit any route:
