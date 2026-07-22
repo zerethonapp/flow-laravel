@@ -131,7 +131,20 @@ php artisan flow:install
 That's it — no other code changes. Traces still write to the local file too
 (Connected mode is additive, not a replacement); if any of the three env
 vars are missing, Flow just skips the push silently and behaves exactly as
-it did before. Building an adapter for a different language/framework?
+it did before.
+
+**If you're pushing from a real deployed environment** (the main reason to
+use Connected mode at all), you also need `except_environments` (see
+Configuration below) to not include that environment — it defaults to
+`['production', 'testing']`, and this check runs *before* anything else in
+`FlowServiceProvider::boot()`. With the default config, setting the three
+`FLOW_*` env vars above on a production server does nothing at all: no
+error, no trace, no push — the middleware never even gets registered.
+Publish the config (`php artisan vendor:publish --tag=flow-config`) and
+remove `'production'` from `except_environments` if you want Connected mode
+active there.
+
+Building an adapter for a different language/framework?
 `flow-docs/ADAPTER_PROTOCOL.md` documents the exact wire contract this
 package's push implements — it's plain HTTP+JSON, no PHP/Laravel-specific
 mechanism involved.
