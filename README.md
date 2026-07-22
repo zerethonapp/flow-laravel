@@ -1,6 +1,20 @@
+<p align="left">
+  <img src="https://flow.zerethon.com/icon.svg" width="56" height="56" alt="Flow logo" />
+</p>
+
 # flow-laravel
 
+[![Tests](https://github.com/zerethonapp/flow-laravel/actions/workflows/tests.yml/badge.svg)](https://github.com/zerethonapp/flow-laravel/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![PHP](https://img.shields.io/badge/php-%5E8.1-777BB4.svg)](composer.json)
+<!-- Add a Packagist version/downloads badge here once the package is listed on packagist.org — see RELEASE.md. -->
+
 Laravel instrumentation adapter for Flow Phase 3 & 4 (real runtime traces).
+
+Contributing? See [CONTRIBUTING.md](CONTRIBUTING.md). Found a security
+issue? See [SECURITY.md](SECURITY.md), not a public issue. Release history:
+[CHANGELOG.md](CHANGELOG.md). This project follows the
+[Contributor Covenant](CODE_OF_CONDUCT.md).
 
 ## Why Flow?
 

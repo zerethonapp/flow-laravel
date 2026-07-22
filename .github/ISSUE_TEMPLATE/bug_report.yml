@@ -1,0 +1,38 @@
+name: Bug Report
+description: Something isn't working the way the README/CHANGELOG says it should
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What did you expect, and what actually happened?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal repro steps, ideally against a fresh Laravel install.
+    validations:
+      required: true
+  - type: input
+    id: package-version
+    attributes:
+      label: flow-laravel version
+      placeholder: "e.g. 0.1.0, or a commit SHA if installed via VCS"
+    validations:
+      required: true
+  - type: input
+    id: laravel-version
+    attributes:
+      label: Laravel version
+      placeholder: "e.g. 11.x"
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant config
+      description: Your `config/flow.php` overrides (if published), or the `FLOW_*` env vars you've set. Redact real secret values.
+      render: php

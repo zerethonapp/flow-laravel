@@ -1,0 +1,32 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # require-dev pins orchestra/testbench ^10.0, which only supports
+        # Laravel 12 — composer.json's illuminate/* constraint claims
+        # 10.0-13.0 support, but that's untested against this dev
+        # dependency today. This matrix reflects what's actually verified,
+        # not the full claimed support range — see CONTRIBUTING.md.
+        php: ["8.2", "8.3", "8.4"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run tests
+        run: ./vendor/bin/phpunit
