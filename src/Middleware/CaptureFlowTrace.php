@@ -55,7 +55,21 @@ final class CaptureFlowTrace
             $record = $this->requestHook->finish($response, $exception);
             if ($record !== null) {
                 $this->traceWriter->write($record);
-                $this->transport->send($record);
+
+                // Deferred so a slow/unreachable Flow API never adds latency
+                // to the traced request's own response. Runs via the app's
+                // terminating callback (the same one the HTTP kernel already
+                // invokes after every response) rather than a real queue
+                // connection, so no queue worker is required for this to fire.
+                // Resolved fresh from the container inside the closure
+                // (instead of capturing $this->transport) so the closure
+                // only needs to serialize the plain $record array, not
+                // whatever TraceTransport implementation happens to be
+                // bound — the sync queue driver serializes queued closures
+                // even when running them in-process.
+                dispatch(function () use ($record): void {
+                    app(TraceTransport::class)->send($record);
+                })->afterResponse();
 
                 if ($response !== null) {
                     $response->headers->set('X-Flow-Trace-Id', (string) $record['traceId']);
