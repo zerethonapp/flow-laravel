@@ -13,6 +13,7 @@ final class TraceCollector
 {
     private ?TraceContext $context = null;
     private ?string $controllerNodeId = null;
+    private ?Throwable $reportedException = null;
 
     public function startRequest(Request $request): void
     {
@@ -163,6 +164,28 @@ final class TraceCollector
     }
 
     /**
+     * Records a request-lifecycle exception the moment Laravel's own
+     * exception handler reports it — see FlowServiceProvider's
+     * `reportable()` registration for why this exists. `Illuminate\Routing\Pipeline`
+     * (the pipeline the 'web'/'api' middleware group — including
+     * CaptureFlowTrace itself — runs through) catches any Throwable at the
+     * exact pipe it's thrown from and renders it to a Response immediately,
+     * so `$next($request)` back in CaptureFlowTrace::handle() never
+     * actually throws: it always returns a normal (if error-rendered)
+     * Response. That made the `?Throwable $exception` parameter below
+     * permanently null in practice — confirmed by a live reproduction
+     * before this fix, not by inspection alone. Reporting is the one place
+     * upstream of that swallowing where the real exception is still
+     * available.
+     */
+    public function recordException(Throwable $e): void
+    {
+        if ($this->context !== null) {
+            $this->reportedException = $e;
+        }
+    }
+
+    /**
      * @return array<string, mixed>|null
      */
     public function finishRequest(?Response $response, ?Throwable $exception = null): ?array
@@ -170,6 +193,13 @@ final class TraceCollector
         if ($this->context === null) {
             return null;
         }
+
+        // $exception (passed by CaptureFlowTrace's own try/catch) stays as
+        // a defensive fallback for the case where something throws before
+        // reaching Laravel's routing pipeline at all — but in the common
+        // case, $this->reportedException (set via recordException() above)
+        // is what's actually populated.
+        $exception ??= $this->reportedException;
 
         $requestMeta = [
             'http_status' => $response?->getStatusCode() ?? 500,
@@ -202,6 +232,7 @@ final class TraceCollector
 
         $this->context = null;
         $this->controllerNodeId = null;
+        $this->reportedException = null;
 
         return $record;
     }

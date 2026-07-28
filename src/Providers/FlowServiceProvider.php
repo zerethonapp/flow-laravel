@@ -7,6 +7,7 @@ namespace Zerethon\Flow\Laravel\Providers;
 use Zerethon\Flow\Laravel\Console\CacheServicesCommand;
 use Zerethon\Flow\Laravel\Console\ClearServicesCacheCommand;
 use Zerethon\Flow\Laravel\Console\InstallCommand;
+use Zerethon\Flow\Laravel\Console\RoutesCommand;
 use Zerethon\Flow\Laravel\Instrumentation\Hooks\DatabaseHook;
 use Zerethon\Flow\Laravel\Instrumentation\Hooks\ExternalHttpHook;
 use Zerethon\Flow\Laravel\Instrumentation\ServiceAutoTraceRegistrar;
@@ -16,9 +17,11 @@ use Zerethon\Flow\Laravel\Middleware\CaptureFlowTrace;
 use Zerethon\Flow\Laravel\Transport\HttpPushTransport;
 use Zerethon\Flow\Laravel\Transport\NullTransport;
 use Zerethon\Flow\Laravel\Transport\TraceTransport;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use Throwable;
 
 final class FlowServiceProvider extends ServiceProvider
 {
@@ -66,6 +69,7 @@ final class FlowServiceProvider extends ServiceProvider
                 CacheServicesCommand::class,
                 ClearServicesCacheCommand::class,
                 InstallCommand::class,
+                RoutesCommand::class,
             ]);
         }
     }
@@ -95,6 +99,7 @@ final class FlowServiceProvider extends ServiceProvider
         if ($this->shouldCollect('request')) {
             $router->pushMiddlewareToGroup('web', CaptureFlowTrace::class);
             $router->pushMiddlewareToGroup('api', CaptureFlowTrace::class);
+            $this->registerExceptionCapture();
         }
 
         // Register database hook if enabled
@@ -119,6 +124,30 @@ final class FlowServiceProvider extends ServiceProvider
                 (new ServiceAutoTraceRegistrar())->register($this->app, $namespaces, $cachePath, $excludePrefixes);
             }
         }
+    }
+
+    /**
+     * `Illuminate\Routing\Pipeline` (the pipeline the 'web'/'api' groups —
+     * including CaptureFlowTrace — run through) catches any exception at
+     * the exact pipe it's thrown from and renders it immediately, so
+     * `$next($request)` back in CaptureFlowTrace::handle() never actually
+     * throws — see TraceCollector::recordException()'s doc comment for the
+     * full explanation, confirmed via a live reproduction, not inspection
+     * alone. `reportable()` is Laravel's own public extension point for
+     * exactly this: it fires from `Handler::report()`, which every
+     * exception still passes through before being rendered.
+     */
+    private function registerExceptionCapture(): void
+    {
+        $handler = $this->app->make(ExceptionHandler::class);
+
+        if (! method_exists($handler, 'reportable')) {
+            return;
+        }
+
+        $handler->reportable(function (Throwable $e): void {
+            $this->app->make(TraceCollector::class)->recordException($e);
+        });
     }
 
     /**
